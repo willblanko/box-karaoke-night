@@ -11,8 +11,9 @@ import {
 import { Folder, ChevronRight, ChevronLeft, HardDrive, Settings } from "lucide-react";
 import { listStorageDirectories } from "@/lib/tv-box-utils";
 import { ScrollArea } from "./ui/scroll-area";
-import { toast } from "sonner"; // Fixed import from "sonner"
+import { toast } from "sonner";
 import { useToast } from "./ui/use-toast";
+import { Capacitor } from "@capacitor/core";
 
 interface DirectoryItem {
   name: string;
@@ -30,7 +31,11 @@ export const ConfigButton = () => {
   const loadDirectories = async (path: string) => {
     try {
       setIsLoading(true);
+      console.log(`Tentando listar diretórios em: ${path}`);
+      
       const dirs = await listStorageDirectories(path);
+      console.log(`Diretórios encontrados: ${dirs.length}`, dirs);
+      
       setDirectories(dirs);
     } catch (error) {
       console.error("Erro ao listar diretórios:", error);
@@ -39,11 +44,20 @@ export const ConfigButton = () => {
         description: "Não foi possível acessar esta pasta",
         variant: "destructive"
       });
+      
       // Em caso de erro, volte a um caminho mais seguro
       if (pathHistory.length > 0) {
         navigateBack();
+      } else if (Capacitor.isNativePlatform()) {
+        // Em ambiente Android, tente carregar caminhos comuns
+        setDirectories([
+          { name: "storage", path: "/storage", isDirectory: true },
+          { name: "sdcard", path: "/sdcard", isDirectory: true },
+          { name: "mnt", path: "/mnt", isDirectory: true },
+          { name: "data", path: "/data", isDirectory: true }
+        ]);
       } else {
-        // Caso esteja já na raiz, carregue opções padrão
+        // Em ambiente web, carregue opções simuladas
         setDirectories([
           { name: "storage", path: "/storage", isDirectory: true },
           { name: "sdcard", path: "/sdcard", isDirectory: true },
@@ -55,6 +69,11 @@ export const ConfigButton = () => {
   };
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      // Em ambiente Android, iniciar em caminhos mais prováveis para TV Box
+      setCurrentPath('/storage');
+    }
+    
     loadDirectories(currentPath);
   }, [currentPath]);
 
@@ -72,9 +91,9 @@ export const ConfigButton = () => {
   };
 
   const selectKaraokeFolder = (path: string) => {
-    // Aqui você salvaria o caminho selecionado em algum local de armazenamento persistente
-    // Por exemplo, usando localStorage ou capacitor preferences
     localStorage.setItem('karaokeFolderPath', path);
+    console.log(`Pasta de karaoke configurada: ${path}`);
+    
     toast({
       title: "Pasta configurada",
       description: `Pasta de Karaoke definida para: ${path}`

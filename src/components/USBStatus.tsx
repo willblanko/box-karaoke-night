@@ -12,11 +12,14 @@ export const USBStatus: React.FC = () => {
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
     
-    // Verificação manual de USB para debugging
+    // Verificação manual de USB para debugging - melhorada
     if (Capacitor.isNativePlatform()) {
+      console.log("Executando em ambiente nativo Android/TV Box");
       checkUSBConnection().then(result => {
         console.log("Verificação manual de USB:", result);
       });
+    } else {
+      console.log("Executando em ambiente web (navegador)");
     }
   }, []);
   
