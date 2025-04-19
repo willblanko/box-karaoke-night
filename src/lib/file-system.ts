@@ -6,7 +6,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 
 // URL do arquivo no GitHub para uso no navegador
-const GITHUB_MUSICAS_URL = 'https://raw.githubusercontent.com/willblanko/box-karaoke-night/refs/heads/main/src/components/musicas.txt?token=GHSAT0AAAAAADCHXYT2ITQQG6MDM2PWRIZG2ADGYWQ';
+const GITHUB_MUSICAS_URL = 'https://raw.githubusercontent.com/willblanko/box-karaoke-night/main/public/musicas.txt';
 
 // Função para ler o arquivo musicas.txt e extrair os metadados
 async function parseSongMetadata(content: string): Promise<Song[]> {
@@ -44,27 +44,57 @@ async function loadSongCatalogFile(): Promise<string> {
 
   try {
     if (Capacitor.isNativePlatform()) {
-      // No Android, carrega do diretório assets do APK
-      const result = await Filesystem.readFile({
-        path: 'public/musicas.txt',
-        directory: Directory.Data  // Alterado para Directory.Data que é válido
-      });
+      // No Android, tenta carregar do diretório de dados
+      try {
+        const result = await Filesystem.readFile({
+          path: 'musicas.txt',
+          directory: Directory.Data
+        });
 
-      const content = typeof result.data === 'string' 
-        ? result.data 
-        : await new Blob([result.data as any]).text();
+        const content = typeof result.data === 'string' 
+          ? result.data 
+          : await new Blob([result.data as any]).text();
 
-      console.log('Arquivo musicas.txt carregado com sucesso do APK');
-      return content;
-    } else {
-      // No navegador, carrega da URL do GitHub
-      const response = await fetch(GITHUB_MUSICAS_URL);
-      if (!response.ok) {
-        throw new Error('Falha ao carregar arquivo do GitHub');
+        console.log('Arquivo musicas.txt carregado com sucesso do APK');
+        return content;
+      } catch (e) {
+        console.log('Falha ao carregar do Data, tentando do Assets:', e);
+        
+        // Tenta carregar do diretório de aplicação
+        const result = await Filesystem.readFile({
+          path: 'public/musicas.txt',
+          directory: Directory.Data
+        });
+
+        const content = typeof result.data === 'string' 
+          ? result.data 
+          : await new Blob([result.data as any]).text();
+
+        console.log('Arquivo musicas.txt carregado com sucesso do APK (path alternativo)');
+        return content;
       }
-      const content = await response.text();
-      console.log('Arquivo musicas.txt carregado com sucesso do GitHub');
-      return content;
+    } else {
+      // No navegador, tenta carregar localmente primeiro
+      try {
+        const response = await fetch('/musicas.txt');
+        if (response.ok) {
+          const content = await response.text();
+          console.log('Arquivo musicas.txt carregado com sucesso localmente');
+          return content;
+        }
+        throw new Error('Arquivo local não disponível');
+      } catch (localError) {
+        console.log('Fallback para GitHub:', localError);
+        
+        // Fallback para GitHub se falhar localmente
+        const response = await fetch(GITHUB_MUSICAS_URL);
+        if (!response.ok) {
+          throw new Error('Falha ao carregar arquivo do GitHub');
+        }
+        const content = await response.text();
+        console.log('Arquivo musicas.txt carregado com sucesso do GitHub');
+        return content;
+      }
     }
   } catch (error) {
     console.error("Erro ao ler o catálogo de músicas:", error);
