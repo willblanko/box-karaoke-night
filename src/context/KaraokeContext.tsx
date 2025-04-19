@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useRef } from "react";
+import React, { createContext, useContext, useRef, useEffect } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
 import { useKaraokeSongs } from "@/hooks/useKaraokeSongs";
