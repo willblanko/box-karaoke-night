@@ -1,16 +1,31 @@
 
-import React, { useState, KeyboardEvent, useEffect } from "react";
+import React, { useState, KeyboardEvent, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useKaraoke } from "@/context/KaraokeContext";
 
 export const SearchBar = () => {
   const { searchInput, setSearchInput, searchSongByNumber } = useKaraoke();
   const [error, setError] = useState<string | null>(null);
+  const inputProcessedRef = useRef<boolean>(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Verificar se o evento já foi processado para evitar duplicação
+    if (inputProcessedRef.current) {
+      inputProcessedRef.current = false;
+      return;
+    }
+
+    // Marcar como processado para evitar processamento duplicado
+    inputProcessedRef.current = true;
+    
     const value = e.target.value.replace(/\D/g, '');
     setSearchInput(value);
     setError(null);
+    
+    // Resetar a flag após o processamento
+    setTimeout(() => {
+      inputProcessedRef.current = false;
+    }, 0);
   };
 
   // Auto-search as user types
