@@ -11,8 +11,13 @@ export const useKaraokePerformance = (playNext: () => void, setWasSkipped: (valu
   useEffect(() => {
     if (playerState === 'ended' && !processingEnded) {
       setProcessingEnded(true);
-      setPerformance(generateRandomPerformance());
       
+      // Only show performance rating if the song wasn't skipped
+      if (!performance) {
+        setPerformance(generateRandomPerformance());
+      }
+      
+      // Always play the next song after a delay
       setTimeout(() => {
         playNext();
         setPerformance(null);
@@ -24,7 +29,7 @@ export const useKaraokePerformance = (playNext: () => void, setWasSkipped: (valu
     if (playerState === 'playing') {
       setWasSkipped(false);
     }
-  }, [playerState, playNext, processingEnded, setWasSkipped]);
+  }, [playerState, playNext, processingEnded, setWasSkipped, performance]);
 
   return {
     playerState,

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useContext, useRef } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
 import { useKaraokeSongs } from "@/hooks/useKaraokeSongs";
@@ -39,7 +39,6 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   const [previousSongs, setPreviousSongs] = React.useState<Song[]>([]);
   const [wasSkipped, setWasSkipped] = React.useState(false);
 
-  const effectRan = useRef(false);
   const skipInProgress = useRef(false);
 
   const playNext = () => {
@@ -51,6 +50,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
       const nextSong = queue[0];
       setCurrentSong(nextSong);
       setQueue(prev => prev.filter((_, i) => i !== 0));
+      setPlayerState('playing'); // Add this to ensure next song plays immediately
       return true;
     } else {
       setCurrentSong(null);
@@ -72,6 +72,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
       }
       setCurrentSong(lastSong);
       setPreviousSongs(prev => prev.slice(0, -1));
+      setPlayerState('playing'); // Add this to ensure previous song plays immediately
     }
   };
 

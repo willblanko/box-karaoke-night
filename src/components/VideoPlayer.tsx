@@ -4,25 +4,18 @@ import { useKaraoke } from "@/context/KaraokeContext";
 import { formatTimeDisplay } from "@/lib/karaoke-utils";
 import { Capacitor } from '@capacitor/core';
 import { Button } from "./ui/button";
-import { Pause, Play, RotateCcw, SkipForward, SkipBack } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Pause, Play, RotateCcw } from "lucide-react";
 
 export const VideoPlayer: React.FC = () => {
-  const { currentSong, playerState, setPlayerState, skipSong, queue, playPrevious } = useKaraoke();
+  const { 
+    currentSong, 
+    playerState, 
+    setPlayerState
+  } = useKaraoke();
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
-  const skipTriggeredRef = useRef(false);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -37,11 +30,9 @@ export const VideoPlayer: React.FC = () => {
     };
 
     const handleEnded = () => {
-      if (!skipTriggeredRef.current) {
-        setPlayerState("ended");
-        if (document.fullscreenElement) {
-          document.exitFullscreen().catch(console.error);
-        }
+      setPlayerState("ended");
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(console.error);
       }
     };
 
@@ -55,12 +46,6 @@ export const VideoPlayer: React.FC = () => {
       videoElement.removeEventListener("ended", handleEnded);
     };
   }, [setPlayerState]);
-
-  useEffect(() => {
-    if (playerState === 'playing') {
-      skipTriggeredRef.current = false;
-    }
-  }, [playerState]);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -111,11 +96,25 @@ export const VideoPlayer: React.FC = () => {
             console.error("Erro ao reproduzir vídeo:", err);
             setPlayerState("idle");
           });
+      } else if (playerState === "paused") {
+        videoElement.pause();
       }
     } else {
       videoElement.src = "";
     }
   }, [currentSong, playerState, setPlayerState]);
+
+  // Update video state when playerState changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    if (playerState === 'playing' && video.paused) {
+      video.play().catch(console.error);
+    } else if (playerState === 'paused' && !video.paused) {
+      video.pause();
+    }
+  }, [playerState]);
 
   const handlePlayPause = () => {
     const video = videoRef.current;
@@ -159,73 +158,33 @@ export const VideoPlayer: React.FC = () => {
         <div className="absolute top-0 left-0 w-full bg-gradient-to-b from-black/80 to-transparent p-4">
           <h2 className="text-tv-xl font-bold text-white">{currentSong.title}</h2>
           <p className="text-tv-base text-white/90">{currentSong.artist}</p>
+          <p className="text-tv-sm text-white/80 mt-1">
+            Música #{currentSong.id}
+          </p>
         </div>
         
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="text-white hover:bg-white/20"
-                onClick={handlePlayPause}
-              >
-                {playerState === 'playing' ? <Pause size={24} /> : <Play size={24} />}
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="text-white hover:bg-white/20"
-                onClick={handleRestart}
-              >
-                <RotateCcw size={24} />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/20"
-                onClick={playPrevious}
-                disabled={!playPrevious}
-              >
-                <SkipBack size={24} />
-              </Button>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    disabled={queue.length === 0}
-                  >
-                    <SkipForward size={24} />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Pular música atual?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza que deseja pular para a próxima música?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={skipSong}>
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+          <div className="flex justify-center items-center mb-2 gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={handleRestart}
+            >
+              <RotateCcw size={24} />
+            </Button>
             
-            <p className="text-tv-sm text-white/80">
-              Música #{currentSong.id}
-            </p>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-white hover:bg-white/20 h-12 w-12"
+              onClick={handlePlayPause}
+            >
+              {playerState === 'playing' ? <Pause size={28} /> : <Play size={28} />}
+            </Button>
           </div>
           
-          <div className="flex justify-between items-center mb-1">
+          <div className="flex justify-between items-center mb-1 mt-2">
             <p className="text-tv-sm text-white/90">
               {formatTimeDisplay(currentTime, duration)}
             </p>

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -9,6 +10,7 @@ import { USBStatus } from "@/components/USBStatus";
 import { ConfigButton } from "@/components/ConfigButton";
 import { KaraokeProvider, useKaraoke } from "@/context/KaraokeContext";
 import { SongConfirmationDialog } from "@/components/SongConfirmationDialog";
+import { KaraokeControls } from "@/components/KaraokeControls";
 
 // KaraokeContent is now a separate component that must be used inside the KaraokeProvider
 const KaraokeContent: React.FC = () => {
@@ -31,7 +33,11 @@ const KaraokeContent: React.FC = () => {
         <div className="lg:flex-1">
           <VideoPlayer />
           
-          <div className="mt-6 flex justify-center">
+          <div className="mt-4">
+            <KaraokeControls />
+          </div>
+          
+          <div className="mt-4 flex justify-center">
             <SearchBar />
           </div>
         </div>
