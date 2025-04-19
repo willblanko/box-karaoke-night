@@ -14,27 +14,29 @@ export const useKaraokeSongs = () => {
   const [karaokeFolderPath, setKaraokeFolderPath] = useState(getKaraokeFolderPath());
   const { toast } = useToast();
   const errorShown = useRef(false);
+  const initialLoadDone = useRef(false);
 
   const loadSongsFromUSB = async () => {
-    // Remove the USB check to allow loading songs regardless of USB connection status
+    // Evita múltiplos carregamentos simultâneos
+    if (isLoading) return;
+    
     try {
       setIsLoading(true);
       const songs = await scanUSBForSongs();
       setAvailableSongs(songs);
       
-      if (songs.length === 0) {
+      if (songs.length === 0 && !initialLoadDone.current) {
         toast({
           title: "Aviso",
           description: "Nenhuma música encontrada. Verifique a pasta selecionada.",
         });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: `${songs.length} músicas carregadas com sucesso.`,
-        });
-        // Reset error flag if we successfully loaded songs
-        errorShown.current = false;
+      } else if (!initialLoadDone.current) {
+        // Só mostra esta mensagem uma vez na inicialização
+        initialLoadDone.current = true;
       }
+      
+      // Reset error flag if we successfully loaded songs
+      errorShown.current = false;
     } catch (error) {
       console.error("Erro ao carregar músicas:", error);
       if (!errorShown.current) {
@@ -51,7 +53,7 @@ export const useKaraokeSongs = () => {
     }
   };
 
-  // Monitorar alterações na pasta de karaoke
+  // Monitorar alterações na pasta de karaoke com menos frequência
   useEffect(() => {
     const checkFolderChanges = () => {
       const currentPath = getKaraokeFolderPath();
@@ -61,15 +63,17 @@ export const useKaraokeSongs = () => {
       }
     };
     
-    // Verificar mudanças a cada 2 segundos
-    const interval = setInterval(checkFolderChanges, 2000);
+    // Verificar mudanças a cada 10 segundos ao invés de 2
+    const interval = setInterval(checkFolderChanges, 10000);
     
     return () => clearInterval(interval);
   }, [karaokeFolderPath]);
 
   useEffect(() => {
-    // Load songs on mount regardless of USB status
-    loadSongsFromUSB();
+    // Load songs on mount only once
+    if (!initialLoadDone.current) {
+      loadSongsFromUSB();
+    }
     
     // Add USB connection listener with less aggressive notifications
     const unsubscribe = listenForUSBConnection((connected) => {

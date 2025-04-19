@@ -8,6 +8,9 @@ import { Capacitor } from '@capacitor/core';
 // URL do arquivo no GitHub para uso no navegador
 const GITHUB_MUSICAS_URL = 'https://raw.githubusercontent.com/willblanko/box-karaoke-night/main/public/musicas.txt';
 
+// Flag para controlar exibição de toasts
+let initialLoadComplete = false;
+
 // Função para ler o arquivo musicas.txt e extrair os metadados
 async function parseSongMetadata(content: string): Promise<Song[]> {
   const songs: Song[] = [];
@@ -44,8 +47,9 @@ async function loadSongCatalogFile(): Promise<string> {
 
   try {
     if (Capacitor.isNativePlatform()) {
-      // No Android, tenta carregar do diretório de dados
+      // No Android, tenta carregar do diretório de assets
       try {
+        // Primeiro tenta carregar do diretório raiz do APK (assets)
         const result = await Filesystem.readFile({
           path: 'musicas.txt',
           directory: Directory.Data
@@ -58,9 +62,9 @@ async function loadSongCatalogFile(): Promise<string> {
         console.log('Arquivo musicas.txt carregado com sucesso do APK');
         return content;
       } catch (e) {
-        console.log('Falha ao carregar do Data, tentando do Assets:', e);
+        console.log('Tentando caminho alternativo:', e);
         
-        // Tenta carregar do diretório de aplicação
+        // Tenta outro caminho comum para arquivos no APK
         const result = await Filesystem.readFile({
           path: 'public/musicas.txt',
           directory: Directory.Data
@@ -108,22 +112,28 @@ export async function scanUSBForSongs(): Promise<Song[]> {
     const content = await loadSongCatalogFile();
     const songs = await parseSongMetadata(content);
     
-    if (songs.length === 0) {
-      toast({
-        title: "Aviso",
-        description: "Nenhuma música encontrada no catálogo.",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Sucesso",
-        description: `${songs.length} músicas carregadas do catálogo.`
-      });
+    // Apenas mostra toast na primeira carga ou se houver erro
+    if (!initialLoadComplete) {
+      if (songs.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "Nenhuma música encontrada no catálogo.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: `${songs.length} músicas carregadas do catálogo.`
+        });
+        // Marca como concluído apenas se for bem-sucedido
+        initialLoadComplete = true;
+      }
     }
     
     return songs;
   } catch (error) {
     console.error("Erro ao carregar músicas:", error);
+    // Sempre mostra erros, mesmo em cargas repetidas
     toast({
       title: "Erro",
       description: "Falha ao carregar o arquivo musicas.txt.",
