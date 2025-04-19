@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
-import { Usb, AlertCircle, Loader2 } from "lucide-react";
+import { Usb, Loader2 } from "lucide-react";
 
 export const USBStatus: React.FC = () => {
   const { isUSBConnected, isLoading } = useKaraoke();

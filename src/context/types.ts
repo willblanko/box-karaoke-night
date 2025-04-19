@@ -11,6 +11,7 @@ export interface KaraokeContextData {
   isLoading: boolean;
   isUSBConnected: boolean;
   pendingSong: Song | null;
+  karaokeFolderPath: string;
   
   addToQueue: (song: Song) => void;
   removeFromQueue: (index: number) => void;
@@ -21,4 +22,5 @@ export interface KaraokeContextData {
   setPlayerState: (state: PlayerState) => void;
   confirmAndPlaySong: () => void;
   cancelPendingSong: () => void;
+  loadSongsFromUSB: () => Promise<void>;
 }

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -7,10 +8,10 @@ import { KeyboardNavigation } from "@/components/KeyboardNavigation";
 import { HelpOverlay } from "@/components/HelpOverlay";
 import { USBStatus } from "@/components/USBStatus";
 import { ConfigButton } from "@/components/ConfigButton";
-import { KaraokeProvider } from "@/context/KaraokeContext";
-import { useKaraoke } from "@/context/KaraokeContext";
+import { KaraokeProvider, useKaraoke } from "@/context/KaraokeContext";
 import { SongConfirmationDialog } from "@/components/SongConfirmationDialog";
 
+// Separate KaraokeContent component that uses the context
 const KaraokeContent: React.FC = () => {
   const { playerState, currentSong } = useKaraoke();
 
@@ -56,6 +57,7 @@ const KaraokeContent: React.FC = () => {
   );
 };
 
+// Main component that wraps everything with the KaraokeProvider
 export const KaraokeApp: React.FC = () => {
   return (
     <KaraokeProvider>

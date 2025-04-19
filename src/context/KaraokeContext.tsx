@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useRef } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
 import { useKaraokeSongs } from "@/hooks/useKaraokeSongs";
@@ -12,6 +12,7 @@ interface KaraokeProviderProps {
 }
 
 export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) => {
+  // Fix the hook order issue by ensuring all hooks are called in the same order
   const {
     queue,
     currentSong,
@@ -28,7 +29,9 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     setSearchInput,
     pendingSong,
     setPendingSong,
-    searchSongByNumber
+    searchSongByNumber,
+    loadSongsFromUSB,
+    karaokeFolderPath
   } = useKaraokeSongs();
 
   const {
@@ -36,6 +39,9 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     setPlayerState,
     performance
   } = useKaraokePerformance(playNext);
+
+  // Make sure any useRef hooks are called before useEffect
+  const effectRan = useRef(false);
 
   const skipSong = () => {
     if (currentSong) {
@@ -86,7 +92,9 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     searchSongByNumber,
     setPlayerState,
     confirmAndPlaySong,
-    cancelPendingSong
+    cancelPendingSong,
+    loadSongsFromUSB,
+    karaokeFolderPath
   };
 
   return (
