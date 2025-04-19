@@ -1,10 +1,24 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
 import { Usb, Loader2 } from "lucide-react";
+import { checkUSBConnection } from "@/lib/tv-box-utils";
+import { Capacitor } from "@capacitor/core";
 
 export const USBStatus: React.FC = () => {
   const { isUSBConnected, isLoading } = useKaraoke();
+  const [isNative, setIsNative] = useState(false);
+  
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+    
+    // Verificação manual de USB para debugging
+    if (Capacitor.isNativePlatform()) {
+      checkUSBConnection().then(result => {
+        console.log("Verificação manual de USB:", result);
+      });
+    }
+  }, []);
   
   return (
     <div className="fixed top-4 right-4 flex items-center gap-2 bg-card/70 p-2 px-3 rounded-full">
@@ -21,7 +35,9 @@ export const USBStatus: React.FC = () => {
       ) : (
         <>
           <Usb size={18} className="text-yellow-500" />
-          <span className="text-tv-sm">Usando catálogo interno</span>
+          <span className="text-tv-sm">
+            {isNative ? "USB não detectado" : "Modo Web (sem USB)"}
+          </span>
         </>
       )}
     </div>

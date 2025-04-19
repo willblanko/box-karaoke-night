@@ -2,7 +2,7 @@
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { getKaraokeFolderPath } from './tv-box-utils';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from "@/components/ui/use-toast";
 import { Capacitor } from '@capacitor/core';
 
 // URL do arquivo no GitHub para uso no navegador
@@ -15,6 +15,8 @@ let initialLoadComplete = false;
 async function parseSongMetadata(content: string): Promise<Song[]> {
   const songs: Song[] = [];
   const blocks = content.split('***').filter(block => block.trim());
+  
+  console.log(`Processando ${blocks.length} blocos de música do catálogo`);
   
   for (const block of blocks) {
     const idMatch = block.match(/\[(\d+)\]/);
@@ -38,6 +40,7 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
     }
   }
   
+  console.log(`Total de ${songs.length} músicas processadas com sucesso`);
   return songs;
 }
 
@@ -47,36 +50,73 @@ async function loadSongCatalogFile(): Promise<string> {
 
   try {
     if (Capacitor.isNativePlatform()) {
-      // No Android, tenta carregar do diretório de assets
+      console.log("Executando em ambiente nativo Android");
+      
+      // Lista os diretórios disponíveis para debugar
       try {
-        const result = await Filesystem.readFile({
-          path: 'public/assets/musicas.txt',
+        const listData = await Filesystem.readdir({
+          path: '/',
           directory: Directory.Data
         });
-
-        const content = typeof result.data === 'string' 
-          ? result.data 
-          : await new Blob([result.data as any]).text();
-
-        console.log('Arquivo musicas.txt carregado com sucesso do APK');
-        return content;
+        console.log("Conteúdo do diretório Data:", listData.files.map(f => f.name));
       } catch (e) {
-        console.log('Erro ao carregar do caminho principal:', e);
-        
-        // Tenta outro caminho comum para arquivos no APK
-        const result = await Filesystem.readFile({
-          path: 'musicas.txt',
-          directory: Directory.Data
-        });
+        console.log("Não foi possível listar o diretório Data:", e);
+      }
+      
+      try {
+        // No Android, tenta carregar de várias fontes possíveis
+        try {
+          // Tenta primeiro do diretório Data (melhor prática)
+          const result = await Filesystem.readFile({
+            path: 'musicas.txt',
+            directory: Directory.Data
+          });
 
-        const content = typeof result.data === 'string' 
-          ? result.data 
-          : await new Blob([result.data as any]).text();
+          const content = typeof result.data === 'string' 
+            ? result.data 
+            : new TextDecoder().decode(result.data as any);
 
-        console.log('Arquivo musicas.txt carregado com sucesso do APK (path alternativo)');
-        return content;
+          console.log('Arquivo musicas.txt carregado com sucesso do diretório Data');
+          return content;
+        } catch (e) {
+          console.log('Erro ao carregar do diretório Data:', e);
+          
+          // Tenta do diretório Document como fallback
+          try {
+            const result = await Filesystem.readFile({
+              path: 'musicas.txt',
+              directory: Directory.Documents
+            });
+
+            const content = typeof result.data === 'string' 
+              ? result.data 
+              : new TextDecoder().decode(result.data as any);
+
+            console.log('Arquivo musicas.txt carregado com sucesso do diretório Documents');
+            return content;
+          } catch (e2) {
+            console.log('Erro ao carregar do diretório Documents:', e2);
+            
+            // Último recurso: tenta do armazenamento externo
+            const result = await Filesystem.readFile({
+              path: 'Download/musicas.txt',
+              directory: Directory.ExternalStorage
+            });
+
+            const content = typeof result.data === 'string' 
+              ? result.data 
+              : new TextDecoder().decode(result.data as any);
+
+            console.log('Arquivo musicas.txt carregado com sucesso do armazenamento externo');
+            return content;
+          }
+        }
+      } catch (finalError) {
+        console.error("Todas as tentativas de leitura nativa falharam:", finalError);
+        throw new Error("Não foi possível carregar o catálogo de músicas do dispositivo");
       }
     } else {
+      console.log("Executando em ambiente web");
       // No navegador, tenta carregar localmente primeiro
       try {
         const response = await fetch('/musicas.txt');
@@ -114,16 +154,9 @@ export async function scanUSBForSongs(): Promise<Song[]> {
     // Apenas mostra toast na primeira carga ou se houver erro
     if (!initialLoadComplete) {
       if (songs.length === 0) {
-        toast({
-          title: "Aviso",
-          description: "Nenhuma música encontrada no catálogo.",
-          variant: "destructive"
-        });
+        console.log("Aviso: Nenhuma música encontrada no catálogo.");
       } else {
-        toast({
-          title: "Sucesso",
-          description: `${songs.length} músicas carregadas do catálogo.`
-        });
+        console.log(`Sucesso: ${songs.length} músicas carregadas do catálogo.`);
         // Marca como concluído apenas se for bem-sucedido
         initialLoadComplete = true;
       }
@@ -133,11 +166,6 @@ export async function scanUSBForSongs(): Promise<Song[]> {
   } catch (error) {
     console.error("Erro ao carregar músicas:", error);
     // Sempre mostra erros, mesmo em cargas repetidas
-    toast({
-      title: "Erro",
-      description: "Falha ao carregar o arquivo musicas.txt.",
-      variant: "destructive"
-    });
     throw error;
   }
 }

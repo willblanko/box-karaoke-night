@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
@@ -27,65 +28,95 @@ export function adaptUIForScreenResolution(): void {
   console.log(`Adaptando UI para resolução: ${innerWidth}x${innerHeight}`);
 }
 
-// Real USB detection using Capacitor Filesystem
+// Verifica se há um dispositivo USB conectado usando APIs nativas do Android
 export async function checkUSBConnection(): Promise<boolean> {
   try {
     if (!Capacitor.isNativePlatform()) {
-      // Para desenvolvimento, simula a presença do USB
-      return true;
+      console.log("Executando em ambiente web, simulando USB como desconectado");
+      return false; // Em ambiente web, simula desconectado para evitar falsos positivos
     }
 
-    // Em ambiente nativo, verifica diretórios externos
+    // Em ambiente Android real, verifica diretórios externos
     try {
+      // Tenta listar dispositivos em /storage
       const result = await Filesystem.readdir({
         path: '/storage',
         directory: Directory.ExternalStorage
       });
 
-      return result.files.some(file => 
+      // Procura por diretórios que indicam dispositivos USB (nomes comuns em Android TV Box)
+      const hasUSB = result.files.some(file => 
         file.name.toLowerCase().includes('usb') || 
-        file.name.toLowerCase().includes('otg')
+        file.name.toLowerCase().includes('otg') ||
+        file.name.toLowerCase().includes('external') ||
+        file.name.toLowerCase().includes('udisk')
       );
+      
+      console.log("Estado do USB verificado:", hasUSB, "Dispositivos encontrados:", result.files.map(f => f.name).join(", "));
+      return hasUSB;
     } catch (error) {
-      // Se falhar em verificar /storage, tenta um método alternativo mais permissivo
-      // Simplesmente assume que um USBé conectado se puder acessar o armazenamento externo
+      console.log("Erro ao verificar /storage, tentando método alternativo:", error);
+      
+      // Método alternativo: verifica se consegue acessar um caminho comum para USBs
       try {
-        await Filesystem.readdir({
-          path: '/',
+        await Filesystem.stat({
+          path: '/storage/usb',
           directory: Directory.ExternalStorage
         });
+        console.log("USB detectado via método alternativo");
         return true;
       } catch (innerError) {
-        console.error('Error checking external storage:', innerError);
-        return false;
+        console.log("USB não detectado em /storage/usb, última tentativa");
+        
+        // Última tentativa: verifica se há algum conteúdo em /mnt/usb
+        try {
+          await Filesystem.stat({
+            path: '/mnt/usb',
+            directory: Directory.ExternalStorage
+          });
+          console.log("USB detectado em /mnt/usb");
+          return true;
+        } catch (finalError) {
+          console.error("USB não detectado após todas as verificações");
+          return false;
+        }
       }
     }
   } catch (error) {
-    console.error('Error checking USB connection:', error);
-    // Se não conseguir verificar, assume que há conexão para evitar mensagens de erro
-    return true;
+    console.error('Erro grave ao verificar conexão USB:', error);
+    return false;
   }
 }
 
 // Listen for USB connection changes
 export function listenForUSBConnection(callback: (isConnected: boolean) => void): () => void {
+  let lastState = false;
+
   // Initial check
-  checkUSBConnection().then(callback);
+  checkUSBConnection().then(state => {
+    lastState = state;
+    callback(state);
+  });
 
   // Set up an interval to check periodically (every 5 seconds)
   const interval = setInterval(async () => {
-    const isConnected = await checkUSBConnection();
-    callback(isConnected);
-  }, 5000); // Increased the interval to reduce number of checks
+    const currentState = await checkUSBConnection();
+    // Só notifica se o estado mudou
+    if (currentState !== lastState) {
+      console.log("Estado do USB mudou de", lastState, "para", currentState);
+      lastState = currentState;
+      callback(currentState);
+    }
+  }, 5000);
 
-  // Clean up on unmount - Return a function that clears the interval
+  // Clean up on unmount
   return () => clearInterval(interval);
 }
 
 // Obtem a pasta configurada para o Karaoke
 export function getKaraokeFolderPath(): string {
   const savedPath = localStorage.getItem('karaokeFolderPath');
-  return savedPath || '/storage/emulated/0/karaoke';
+  return savedPath || '/storage/emulated/0/Download/karaoke';
 }
 
 // Function to list available storage directories for karaoke folder selection
@@ -93,24 +124,64 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
   try {
     if (!Capacitor.isNativePlatform()) {
       // Retorna diretórios simulados para desenvolvimento
+      console.log("Ambiente web, retornando diretórios simulados");
       return [
         { name: 'storage', path: '/storage', isDirectory: true },
         { name: 'sdcard', path: '/sdcard', isDirectory: true }
       ];
     }
 
-    const result = await Filesystem.readdir({
-      path: path,
-      directory: Directory.ExternalStorage
-    });
+    console.log(`Listando diretórios em: ${path}`);
+    
+    try {
+      const result = await Filesystem.readdir({
+        path: path,
+        directory: Directory.ExternalStorage
+      });
 
-    return result.files.map(file => ({
-      name: file.name,
-      path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
-      isDirectory: file.type === 'directory'
-    }));
-  } catch (error) {
-    console.error('Erro ao listar diretórios:', error);
-    return [];
+      console.log(`Encontrados ${result.files.length} itens em ${path}`);
+      
+      return result.files.map(file => ({
+        name: file.name,
+        path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
+        isDirectory: file.type === 'directory'
+      }));
+    } catch (error) {
+      console.error(`Erro ao listar diretórios em ${path}:`, error);
+      
+      // Tenta alguns caminhos comuns se o caminho principal falhar
+      if (path === '/') {
+        console.log("Tentando caminhos alternativos");
+        const commonPaths = [
+          { name: 'storage', path: '/storage', isDirectory: true },
+          { name: 'sdcard', path: '/sdcard', isDirectory: true },
+          { name: 'mnt', path: '/mnt', isDirectory: true },
+          { name: 'emulated', path: '/storage/emulated/0', isDirectory: true },
+          { name: 'Download', path: '/storage/emulated/0/Download', isDirectory: true }
+        ];
+        
+        // Verifica quais caminhos existem
+        const validPaths = await Promise.all(
+          commonPaths.map(async (item) => {
+            try {
+              await Filesystem.stat({
+                path: item.path,
+                directory: Directory.ExternalStorage
+              });
+              return item;
+            } catch {
+              return null;
+            }
+          })
+        );
+        
+        return validPaths.filter(Boolean);
+      }
+      
+      return [];
+    }
+  } catch (generalError) {
+    console.error('Erro geral ao listar diretórios:', generalError);
+    return []; 
   }
 }
