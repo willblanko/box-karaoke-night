@@ -1,0 +1,36 @@
+
+[1001]
+Arquivo= 1001.mp4
+Artista= paralamas do sucesso
+Musica= a lhe esperar
+***
+[1002]
+Arquivo= 1002.mp4
+Artista= avioes do forro
+Musica= agora chora e com banda calypso
+***
+[1003]
+Arquivo= 1003.mp4
+Artista= Raça Negra
+Musica= Cheia de Manias
+***
+[1004]
+Arquivo= 1004.mp4
+Artista= Zezé Di Camargo & Luciano
+Musica= É o Amor
+***
+[1005]
+Arquivo= 1005.mp4
+Artista= Djavan
+Musica= Sina
+***
+[1123]
+Arquivo= 1123.mp4
+Artista= João Mineiro e Marciano
+Musica= Ainda Ontem Chorei de Saudade
+***
+[1200]
+Arquivo= 1200.mp4
+Artista= Alceu Valença
+Musica= Anunciação
+***

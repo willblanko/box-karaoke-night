@@ -2,6 +2,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { getKaraokeFolderPath } from './tv-box-utils';
 import { toast } from '@/components/ui/use-toast';
+import { Capacitor } from '@capacitor/core';
 
 // Função para ler o arquivo musicas.txt e extrair os metadados
 async function parseSongMetadata(content: string): Promise<Song[]> {
@@ -38,17 +39,29 @@ async function loadSongCatalogFile(): Promise<string> {
   console.log("Carregando catálogo de músicas...");
 
   try {
-    const result = await Filesystem.readFile({
-      path: 'assets/flutter_assets/assets/musicas.txt',
-      directory: Directory.ExternalStorage
-    });
+    if (Capacitor.isNativePlatform()) {
+      // No Android, carrega do diretório assets
+      const result = await Filesystem.readFile({
+        path: 'public/musicas.txt',
+        directory: Directory.ExternalStorage
+      });
 
-    const content = typeof result.data === 'string' 
-      ? result.data 
-      : await new Blob([result.data as any]).text();
+      const content = typeof result.data === 'string' 
+        ? result.data 
+        : await new Blob([result.data as any]).text();
 
-    console.log('Arquivo musicas.txt carregado com sucesso');
-    return content;
+      console.log('Arquivo musicas.txt carregado com sucesso do Android');
+      return content;
+    } else {
+      // No navegador, carrega da URL do GitHub
+      const response = await fetch('https://raw.githubusercontent.com/willblanko/box-karaoke-night/refs/heads/main/src/components/musicas.txt?token=GHSAT0AAAAAADCHXYT2ITQQG6MDM2PWRIZG2ADGYWQ');
+      if (!response.ok) {
+        throw new Error('Falha ao carregar arquivo do GitHub');
+      }
+      const content = await response.text();
+      console.log('Arquivo musicas.txt carregado com sucesso do GitHub');
+      return content;
+    }
   } catch (error) {
     console.error("Erro ao ler o catálogo de músicas:", error);
     throw new Error('Não foi possível carregar o arquivo musicas.txt');
@@ -79,7 +92,7 @@ export async function scanUSBForSongs(): Promise<Song[]> {
     console.error("Erro ao carregar músicas:", error);
     toast({
       title: "Erro",
-      description: "Falha ao carregar o arquivo musicas.txt do APK.",
+      description: "Falha ao carregar o arquivo musicas.txt.",
       variant: "destructive"
     });
     throw error;
