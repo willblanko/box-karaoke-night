@@ -9,6 +9,7 @@ export const VideoPlayer: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
+  const skipTriggeredRef = useRef(false);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -23,10 +24,12 @@ export const VideoPlayer: React.FC = () => {
     };
 
     const handleEnded = () => {
-      setPlayerState("ended");
-      // Sair do modo de tela cheia quando o vídeo terminar
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(console.error);
+      if (!skipTriggeredRef.current) {
+        setPlayerState("ended");
+        // Sair do modo de tela cheia quando o vídeo terminar
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(console.error);
+        }
       }
     };
 
@@ -40,6 +43,13 @@ export const VideoPlayer: React.FC = () => {
       videoElement.removeEventListener("ended", handleEnded);
     };
   }, [setPlayerState]);
+
+  // Resetar o flag de skip quando o playerState muda
+  useEffect(() => {
+    if (playerState === 'playing') {
+      skipTriggeredRef.current = false;
+    }
+  }, [playerState]);
 
   useEffect(() => {
     const videoElement = videoRef.current;

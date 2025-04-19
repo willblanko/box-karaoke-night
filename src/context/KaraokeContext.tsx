@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
@@ -42,10 +41,22 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
 
   // Make sure any useRef hooks are called before useEffect
   const effectRan = useRef(false);
+  const skipInProgress = useRef(false);
 
   const skipSong = () => {
+    if (skipInProgress.current) return; // Previne múltiplos skips
+
     if (currentSong) {
+      skipInProgress.current = true;
+      console.log("Pulando música atual");
+      
+      // Mudamos para "ended" para gerar a avaliação
       setPlayerState('ended');
+      
+      // Resetamos o flag após um pequeno delay
+      setTimeout(() => {
+        skipInProgress.current = false;
+      }, 3500); // Ligeiramente mais longo que o timeout de avaliação
     } else {
       playNext();
     }
