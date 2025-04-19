@@ -1,102 +1,50 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Song, PlayerState, Performance } from "@/lib/types";
-import { generateRandomPerformance } from "@/lib/karaoke-utils";
-import { scanUSBForSongs } from "@/lib/file-system";
-import { listenForUSBConnection } from "@/lib/tv-box-utils";
+import React, { createContext, useContext, useEffect } from "react";
+import { KaraokeContextData } from "./types";
+import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
+import { useKaraokeSongs } from "@/hooks/useKaraokeSongs";
+import { useKaraokePerformance } from "@/hooks/useKaraokePerformance";
 
-// Dados que serão compartilhados pelo contexto
-interface KaraokeContextData {
-  queue: Song[];               // Fila de músicas
-  currentSong: Song | null;    // Música atual
-  playerState: PlayerState;    // Estado do player
-  performance: Performance | null; // Avaliação da última música
-  searchInput: string;         // Input de busca de música
-  availableSongs: Song[];      // Músicas disponíveis (do USB)
-  isLoading: boolean;          // Indica se está carregando músicas
-  isUSBConnected: boolean;     // Indica se o USB está conectado
-  pendingSong: Song | null;    // Música pendente para confirmação
-  
-  // Ações
-  addToQueue: (song: Song) => void;
-  removeFromQueue: (index: number) => void;
-  skipSong: () => void;
-  playNext: () => void;
-  setSearchInput: (input: string) => void;
-  searchSongByNumber: (number: string) => Song | undefined;
-  setPlayerState: (state: PlayerState) => void;
-  confirmAndPlaySong: () => void; // Confirmar e reproduzir música pendente
-  cancelPendingSong: () => void;  // Cancelar música pendente
-}
-
-// Criando o contexto
 const KaraokeContext = createContext<KaraokeContextData | undefined>(undefined);
 
-// Mock de músicas para teste (seria substituído pela leitura real do USB)
-const mockSongs: Song[] = [
-  { id: 1, title: "Evidências", artist: "Chitãozinho & Xororó", duration: 240, videoPath: "/usb/1.mp4" },
-  { id: 2, title: "Garçom", artist: "Reginaldo Rossi", duration: 195, videoPath: "/usb/2.mp4" },
-  { id: 3, title: "Cheia de Manias", artist: "Raça Negra", duration: 228, videoPath: "/usb/3.mp4" },
-  { id: 4, title: "É o Amor", artist: "Zezé Di Camargo & Luciano", duration: 210, videoPath: "/usb/4.mp4" },
-  { id: 5, title: "Sina", artist: "Djavan", duration: 258, videoPath: "/usb/5.mp4" },
-  { id: 123, title: "Ainda Ontem Chorei de Saudade", artist: "João Mineiro e Marciano", duration: 189, videoPath: "/usb/123.mp4" },
-  { id: 200, title: "Anunciação", artist: "Alceu Valença", duration: 243, videoPath: "/usb/200.mp4" },
-  // Na implementação real, seriam carregadas do USB
-];
-
 interface KaraokeProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) => {
-  const [queue, setQueue] = useState<Song[]>([]);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [playerState, setPlayerState] = useState<PlayerState>("idle");
-  const [performance, setPerformance] = useState<Performance | null>(null);
-  const [searchInput, setSearchInput] = useState<string>("");
-  const [availableSongs, setAvailableSongs] = useState<Song[]>(mockSongs);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isUSBConnected, setIsUSBConnected] = useState<boolean>(false);
-  const [pendingSong, setPendingSong] = useState<Song | null>(null);
-  
-  // Função para carregar músicas do USB
-  const loadSongsFromUSB = async () => {
-    try {
-      setIsLoading(true);
-      const songs = await scanUSBForSongs();
-      setAvailableSongs(songs);
-      setIsUSBConnected(true);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Erro ao carregar músicas do USB:", error);
-      setIsLoading(false);
-    }
-  };
-  
-  // Monitorar conexão USB
-  useEffect(() => {
-    // Em um app Android real, isso usaria APIs nativas para detectar USB
-    listenForUSBConnection(() => {
-      loadSongsFromUSB();
-    });
-    
-    // Carregar músicas iniciais (mock para demonstração)
-    loadSongsFromUSB();
-  }, []);
+  const {
+    queue,
+    currentSong,
+    addToQueue,
+    removeFromQueue,
+    playNext
+  } = useKaraokeQueue();
 
-  // Adicionar música à fila
-  const addToQueue = (song: Song) => {
-    setQueue(prev => [...prev, song]);
-    
-    // Se não tiver música tocando, inicia a reprodução desta música
-    if (playerState === "idle" && currentSong === null) {
-      setCurrentSong(song);
-      setQueue(prev => prev.filter((_, i) => i !== 0));
-      setPlayerState("playing");
+  const {
+    availableSongs,
+    isLoading,
+    isUSBConnected,
+    searchInput,
+    setSearchInput,
+    pendingSong,
+    setPendingSong,
+    searchSongByNumber
+  } = useKaraokeSongs();
+
+  const {
+    playerState,
+    setPlayerState,
+    performance
+  } = useKaraokePerformance(playNext);
+
+  const skipSong = () => {
+    if (currentSong) {
+      setPlayerState('ended');
+    } else {
+      playNext();
     }
   };
 
-  // Confirmar e reproduzir a música pendente
   const confirmAndPlaySong = () => {
     if (pendingSong) {
       addToQueue(pendingSong);
@@ -104,94 +52,23 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     }
   };
 
-  // Cancelar música pendente
   const cancelPendingSong = () => {
     setPendingSong(null);
   };
 
-  // Remover música da fila
-  const removeFromQueue = (index: number) => {
-    setQueue(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Pular para próxima música
-  const skipSong = () => {
-    // Mostrar avaliação antes de pular
-    if (currentSong) {
-      setPerformance(generateRandomPerformance());
-      
-      // Após exibir a avaliação, reproduzir a próxima música
-      setTimeout(() => {
-        playNext();
-        setPerformance(null);
-      }, 3000);
-    } else {
-      playNext();
-    }
-  };
-
-  // Reproduzir próxima música da fila
-  const playNext = () => {
-    if (queue.length > 0) {
-      // Pegar a primeira música da fila
-      const nextSong = queue[0];
-      setCurrentSong(nextSong);
-      
-      // Remover a música da fila
-      setQueue(prev => prev.filter((_, i) => i !== 0));
-      setPlayerState("playing");
-    } else {
-      // Não há mais músicas na fila
-      setCurrentSong(null);
-      setPlayerState("idle");
-    }
-  };
-
-  // Buscar música por número
-  const searchSongByNumber = (number: string): Song | undefined => {
-    const songId = parseInt(number, 10);
-    if (isNaN(songId)) return undefined;
-
-    const song = availableSongs.find(s => s.id === songId);
-    if (song) {
-      // Em vez de adicionar diretamente à fila, definimos como pendente
-      setPendingSong(song);
-      setSearchInput("");
-      return song;
-    }
-    return undefined;
-  };
-
-  // Detectar quando uma música termina para mostrar avaliação e reproduzir a próxima
-  useEffect(() => {
-    if (playerState === "ended" && currentSong) {
-      setPerformance(generateRandomPerformance());
-      
-      // Após exibir a avaliação, reproduzir a próxima música
-      setTimeout(() => {
-        playNext();
-        setPerformance(null);
-      }, 3000);
-    }
-  }, [playerState]);
-
-  // Para detectar teclas de controle remoto (como avançar)
+  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Seta para direita/avançar (código 39 é a seta direita)
       if (e.keyCode === 39 || e.key === "ArrowRight") {
         skipSong();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSong, queue]);
 
-  const contextValue = {
+  const contextValue: KaraokeContextData = {
     queue,
     currentSong,
     playerState,
@@ -219,7 +96,6 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   );
 };
 
-// Hook para usar o contexto
 export const useKaraoke = () => {
   const context = useContext(KaraokeContext);
   if (context === undefined) {
