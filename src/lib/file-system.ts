@@ -79,7 +79,7 @@ Musica= Anunciação
     // Em produção no Android, ler o arquivo musicas.txt do app
     const result = await Filesystem.readFile({
       path: 'public/musicas.txt',
-      directory: Directory.Application
+      directory: Directory.App  // Corrigido de Directory.Application para Directory.App
     });
 
     // Converter o resultado para string, já que pode ser string ou Blob
