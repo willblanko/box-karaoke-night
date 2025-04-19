@@ -1,4 +1,3 @@
-
 import { Filesystem, Directory, ReadFileResult } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { Capacitor } from '@capacitor/core';
@@ -33,7 +32,7 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
   return songs;
 }
 
-// Função para carregar o arquivo musicas.txt interno do aplicativo
+// Função para carregar o arquivo musicas.txt de diferentes locais
 async function loadSongCatalogFile(): Promise<string> {
   try {
     if (!Capacitor.isNativePlatform()) {
@@ -76,19 +75,39 @@ Musica= Anunciação
 ***`;
     }
 
-    // Em produção no Android, ler o arquivo musicas.txt do app
-    const result = await Filesystem.readFile({
-      path: 'public/musicas.txt',
-      directory: Directory.Documents  // Corrigido para usar um valor válido do enum Directory
-    });
+    // Tentar múltiplos locais para o arquivo musicas.txt
+    const possibleLocations = [
+      { directory: Directory.External, path: 'karaoke/musicas.txt' },
+      { directory: Directory.Documents, path: 'musicas.txt' },
+      { directory: Directory.Data, path: 'musicas.txt' },
+      { directory: Directory.External, path: 'usb/musicas.txt' },
+      { directory: Directory.External, path: 'Downloads/musicas.txt' }
+    ];
 
-    // Converter o resultado para string, já que pode ser string ou Blob
-    if (typeof result.data === 'string') {
-      return result.data;
-    } else {
-      // Se for um Blob, converter para texto
-      return await new Blob([result.data as any]).text();
+    for (const location of possibleLocations) {
+      try {
+        const result = await Filesystem.readFile({
+          path: location.path,
+          directory: location.directory
+        });
+
+        // Converter o resultado para string
+        if (typeof result.data === 'string') {
+          console.log(`Arquivo encontrado em: ${location.path}`);
+          return result.data;
+        } else {
+          // Se for um Blob, converter para texto
+          const text = await new Blob([result.data as any]).text();
+          console.log(`Arquivo encontrado em: ${location.path}`);
+          return text;
+        }
+      } catch (error) {
+        // Continuar tentando outros locais se não encontrar
+        console.log(`Não encontrado em: ${location.path}`);
+      }
     }
+
+    throw new Error("Arquivo musicas.txt não encontrado em nenhum local");
   } catch (error) {
     console.error("Erro ao ler o catálogo de músicas:", error);
     throw error;
