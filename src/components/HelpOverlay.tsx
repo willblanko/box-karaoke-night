@@ -1,27 +1,14 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, X } from "lucide-react";
 
 /**
  * Componente que mostra instruções de uso do app
- * Aparece inicialmente e pode ser reaberto com um botão de ajuda
+ * Pode ser aberto com um botão de ajuda
  */
 export const HelpOverlay: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [hasSeenHelp, setHasSeenHelp] = useState(false);
-  
-  // Na primeira vez que o app é aberto, mostrar ajuda por 10 segundos
-  useEffect(() => {
-    if (!hasSeenHelp) {
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setHasSeenHelp(true);
-      }, 10000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [hasSeenHelp]);
+  const [isVisible, setIsVisible] = useState(false);
   
   if (!isVisible) {
     return (
@@ -64,12 +51,6 @@ export const HelpOverlay: React.FC = () => {
           <div>
             <h3 className="font-bold text-tv-lg mb-1">3. Fila de reprodução</h3>
             <p>Você pode adicionar várias músicas à fila. Elas serão reproduzidas em sequência.</p>
-          </div>
-          
-          <div className="pt-4 border-t">
-            <p className="text-muted-foreground text-tv-sm">
-              Para acessar esta ajuda novamente, clique no botão ? no canto inferior direito da tela.
-            </p>
           </div>
         </div>
         
