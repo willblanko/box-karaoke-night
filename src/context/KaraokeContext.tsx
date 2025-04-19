@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Song, PlayerState, Performance } from "@/lib/types";
 import { generateRandomPerformance } from "@/lib/karaoke-utils";
@@ -14,6 +15,7 @@ interface KaraokeContextData {
   availableSongs: Song[];      // Músicas disponíveis (do USB)
   isLoading: boolean;          // Indica se está carregando músicas
   isUSBConnected: boolean;     // Indica se o USB está conectado
+  pendingSong: Song | null;    // Música pendente para confirmação
   
   // Ações
   addToQueue: (song: Song) => void;
@@ -23,6 +25,8 @@ interface KaraokeContextData {
   setSearchInput: (input: string) => void;
   searchSongByNumber: (number: string) => Song | undefined;
   setPlayerState: (state: PlayerState) => void;
+  confirmAndPlaySong: () => void; // Confirmar e reproduzir música pendente
+  cancelPendingSong: () => void;  // Cancelar música pendente
 }
 
 // Criando o contexto
@@ -53,6 +57,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   const [availableSongs, setAvailableSongs] = useState<Song[]>(mockSongs);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isUSBConnected, setIsUSBConnected] = useState<boolean>(false);
+  const [pendingSong, setPendingSong] = useState<Song | null>(null);
   
   // Função para carregar músicas do USB
   const loadSongsFromUSB = async () => {
@@ -89,6 +94,19 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
       setQueue(prev => prev.filter((_, i) => i !== 0));
       setPlayerState("playing");
     }
+  };
+
+  // Confirmar e reproduzir a música pendente
+  const confirmAndPlaySong = () => {
+    if (pendingSong) {
+      addToQueue(pendingSong);
+      setPendingSong(null);
+    }
+  };
+
+  // Cancelar música pendente
+  const cancelPendingSong = () => {
+    setPendingSong(null);
   };
 
   // Remover música da fila
@@ -136,7 +154,8 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
 
     const song = availableSongs.find(s => s.id === songId);
     if (song) {
-      addToQueue(song);
+      // Em vez de adicionar diretamente à fila, definimos como pendente
+      setPendingSong(song);
       setSearchInput("");
       return song;
     }
@@ -181,13 +200,16 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     availableSongs,
     isLoading,
     isUSBConnected,
+    pendingSong,
     addToQueue,
     removeFromQueue,
     skipSong,
     playNext,
     setSearchInput,
     searchSongByNumber,
-    setPlayerState
+    setPlayerState,
+    confirmAndPlaySong,
+    cancelPendingSong
   };
 
   return (

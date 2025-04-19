@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -8,6 +9,7 @@ import { HelpOverlay } from "@/components/HelpOverlay";
 import { USBStatus } from "@/components/USBStatus";
 import { KaraokeProvider } from "@/context/KaraokeContext";
 import { useKaraoke } from "@/context/KaraokeContext";
+import { SongConfirmationDialog } from "@/components/SongConfirmationDialog";
 
 const KaraokeContent: React.FC = () => {
   const { playerState, currentSong } = useKaraoke();
@@ -48,6 +50,7 @@ const KaraokeContent: React.FC = () => {
       <PerformanceRating />
       <KeyboardNavigation />
       <HelpOverlay />
+      <SongConfirmationDialog />
     </div>
   );
 };

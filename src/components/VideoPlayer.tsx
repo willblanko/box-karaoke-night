@@ -23,7 +23,10 @@ export const VideoPlayer: React.FC = () => {
 
     const handleEnded = () => {
       setPlayerState("ended");
-      document.exitFullscreen().catch(console.error);
+      // Sair do modo de tela cheia quando o vídeo terminar
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(console.error);
+      }
     };
 
     videoElement.addEventListener("timeupdate", handleTimeUpdate);
@@ -35,20 +38,30 @@ export const VideoPlayer: React.FC = () => {
       videoElement.removeEventListener("durationchange", handleDurationChange);
       videoElement.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [setPlayerState]);
 
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
     if (currentSong) {
-      const mockPath = "https://example.com/sample-video.mp4";
-      videoElement.src = mockPath;
+      console.log("Carregando vídeo:", currentSong.title, currentSong.videoPath);
+      
+      // Em um ambiente de desenvolvimento/teste, use um vídeo de exemplo
+      // Em produção, usaríamos o caminho real do vídeo
+      const videoPath = currentSong.videoPath || "https://example.com/sample-video.mp4";
+      
+      // Substituir com um vídeo real para testes
+      const testVideo = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+      videoElement.src = testVideo;
       videoElement.load();
       
       if (playerState === "playing") {
+        console.log("Tentando reproduzir vídeo");
         videoElement.play()
           .then(() => {
+            console.log("Vídeo reproduzindo com sucesso!");
+            // Em um aplicativo de TV real, você pode querer ativar tela cheia
             videoElement.requestFullscreen()
               .catch(err => console.error("Erro ao entrar em tela cheia:", err));
           })
@@ -60,7 +73,7 @@ export const VideoPlayer: React.FC = () => {
     } else {
       videoElement.src = "";
     }
-  }, [currentSong, playerState]);
+  }, [currentSong, playerState, setPlayerState]);
 
   if (!currentSong) {
     return (
