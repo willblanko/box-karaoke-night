@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
@@ -61,7 +62,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     playerState,
     setPlayerState,
     performance
-  } = useKaraokePerformance(playNext);
+  } = useKaraokePerformance(playNext, setWasSkipped);
   
   const playPrevious = () => {
     if (previousSongs.length > 0) {
@@ -135,20 +136,21 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     isLoading,
     isUSBConnected,
     pendingSong,
+    karaokeFolderPath,
+    previousSongs,
+    wasSkipped,
+    
     addToQueue,
     removeFromQueue,
     skipSong,
     playNext,
+    playPrevious,
     setSearchInput,
     searchSongByNumber,
     setPlayerState,
     confirmAndPlaySong,
     cancelPendingSong,
     loadSongsFromUSB,
-    karaokeFolderPath,
-    playPrevious,
-    previousSongs,
-    wasSkipped,
     setWasSkipped
   };
 

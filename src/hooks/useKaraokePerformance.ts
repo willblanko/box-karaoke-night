@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { PlayerState, Performance } from '@/lib/types';
 import { generateRandomPerformance } from '@/lib/karaoke-utils';
 
-export const useKaraokePerformance = (playNext: () => void) => {
+export const useKaraokePerformance = (playNext: () => void, setWasSkipped: (value: boolean) => void) => {
   const [playerState, setPlayerState] = useState<PlayerState>('idle');
   const [performance, setPerformance] = useState<Performance | null>(null);
   const [processingEnded, setProcessingEnded] = useState(false);
@@ -24,7 +24,7 @@ export const useKaraokePerformance = (playNext: () => void) => {
     if (playerState === 'playing') {
       setWasSkipped(false);
     }
-  }, [playerState, playNext, processingEnded]);
+  }, [playerState, playNext, processingEnded, setWasSkipped]);
 
   return {
     playerState,
