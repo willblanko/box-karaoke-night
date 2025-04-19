@@ -50,7 +50,7 @@ async function loadSongCatalogFile(): Promise<string> {
       try {
         const result = await Filesystem.readFile({
           path: 'public/assets/musicas.txt',
-          directory: Directory.Assets
+          directory: Directory.Application
         });
 
         const content = typeof result.data === 'string' 
@@ -65,7 +65,7 @@ async function loadSongCatalogFile(): Promise<string> {
         // Tenta outro caminho comum para arquivos no APK
         const result = await Filesystem.readFile({
           path: 'musicas.txt',
-          directory: Directory.Assets
+          directory: Directory.Application
         });
 
         const content = typeof result.data === 'string' 
