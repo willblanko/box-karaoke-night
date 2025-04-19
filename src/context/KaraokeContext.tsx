@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
@@ -13,7 +12,6 @@ interface KaraokeProviderProps {
 }
 
 export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) => {
-  // Fix the hook order issue by ensuring all hooks are called in the same order
   const {
     queue,
     currentSong,
@@ -38,12 +36,11 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   } = useKaraokeSongs();
 
   const [previousSongs, setPreviousSongs] = React.useState<Song[]>([]);
-  
-  // Make sure any useRef hooks are called before useEffect
+  const [wasSkipped, setWasSkipped] = React.useState(false);
+
   const effectRan = useRef(false);
   const skipInProgress = useRef(false);
 
-  // Define playNext function before using it in useKaraokePerformance
   const playNext = () => {
     if (currentSong) {
       setPreviousSongs(prev => [...prev, currentSong]);
@@ -78,19 +75,18 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   };
 
   const skipSong = () => {
-    if (skipInProgress.current) return; // Previne múltiplos skips
+    if (skipInProgress.current) return;
 
     if (currentSong) {
       skipInProgress.current = true;
       console.log("Pulando música atual");
       
-      // Mudamos para "ended" para gerar a avaliação
+      setWasSkipped(true);
       setPlayerState('ended');
       
-      // Resetamos o flag após um pequeno delay
       setTimeout(() => {
         skipInProgress.current = false;
-      }, 3500); // Ligeiramente mais longo que o timeout de avaliação
+      }, 3500);
     } else {
       playNext();
     }
@@ -118,7 +114,6 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     setSearchInput(''); // Limpa o input quando cancela
   };
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.keyCode === 39 || e.key === "ArrowRight") {
@@ -152,7 +147,9 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     loadSongsFromUSB,
     karaokeFolderPath,
     playPrevious,
-    previousSongs
+    previousSongs,
+    wasSkipped,
+    setWasSkipped
   };
 
   return (

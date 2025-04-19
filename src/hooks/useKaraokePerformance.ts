@@ -9,8 +9,6 @@ export const useKaraokePerformance = (playNext: () => void) => {
   const [processingEnded, setProcessingEnded] = useState(false);
 
   useEffect(() => {
-    // Só geramos uma avaliação quando o estado muda para 'ended'
-    // e não estamos já processando um fim de música
     if (playerState === 'ended' && !processingEnded) {
       setProcessingEnded(true);
       setPerformance(generateRandomPerformance());
@@ -20,6 +18,11 @@ export const useKaraokePerformance = (playNext: () => void) => {
         setPerformance(null);
         setProcessingEnded(false);
       }, 3000);
+    }
+
+    // Reset wasSkipped when starting to play
+    if (playerState === 'playing') {
+      setWasSkipped(false);
     }
   }, [playerState, playNext, processingEnded]);
 

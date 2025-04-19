@@ -1,12 +1,19 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export const PerformanceRating: React.FC = () => {
-  const { performance } = useKaraoke();
+  const { performance, wasSkipped, setWasSkipped, setPlayerState } = useKaraoke();
 
-  if (!performance) return null;
+  if (!performance || wasSkipped) return null;
+
+  const handleClose = () => {
+    setWasSkipped(true);
+    setPlayerState('idle');
+  };
 
   // Determinar cor da pontuação com base no valor
   const getScoreColor = () => {
@@ -20,7 +27,16 @@ export const PerformanceRating: React.FC = () => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-      <Card className="animate-scale-in p-8 max-w-md w-full bg-card/95 text-center">
+      <Card className="animate-scale-in p-8 max-w-md w-full bg-card/95 text-center relative">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="absolute right-2 top-2"
+          onClick={handleClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+
         <h2 className="text-tv-3xl font-bold mb-3">Avaliação</h2>
         
         <div className={`text-tv-5xl font-bold mb-6 ${getScoreColor()}`}>

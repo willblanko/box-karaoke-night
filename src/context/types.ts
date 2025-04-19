@@ -13,6 +13,7 @@ export interface KaraokeContextData {
   pendingSong: Song | null;
   karaokeFolderPath: string;
   previousSongs: Song[];
+  wasSkipped: boolean;
   
   addToQueue: (song: Song) => void;
   removeFromQueue: (index: number) => void;
@@ -25,4 +26,5 @@ export interface KaraokeContextData {
   confirmAndPlaySong: () => void;
   cancelPendingSong: () => void;
   loadSongsFromUSB: () => Promise<void>;
+  setWasSkipped: (value: boolean) => void;
 }
