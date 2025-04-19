@@ -1,6 +1,8 @@
-import { Filesystem, Directory, ReadFileResult } from '@capacitor/filesystem';
+
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { Capacitor } from '@capacitor/core';
+import { getKaraokeFolderPath } from './tv-box-utils';
 
 // Função para ler o arquivo musicas.txt e extrair os metadados
 async function parseSongMetadata(content: string): Promise<Song[]> {
@@ -24,7 +26,7 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
         title,
         artist,
         duration: 0, // Será preenchido quando o vídeo for carregado
-        videoPath: `/usb/karaoke/${videoPath}`
+        videoPath: `${getKaraokeFolderPath()}/${videoPath}` // Usa o caminho configurado
       });
     }
   }
@@ -75,13 +77,16 @@ Musica= Anunciação
 ***`;
     }
 
-    // Tentar múltiplos locais para o arquivo musicas.txt
+    const karaokeFolder = getKaraokeFolderPath();
+    console.log(`Buscando musicas.txt em: ${karaokeFolder}`);
+
+    // Tentar múltiplos locais para o arquivo musicas.txt, começando pela pasta configurada
     const possibleLocations = [
-      { directory: Directory.External, path: 'karaoke/musicas.txt' },
+      { directory: Directory.ExternalStorage, path: `${karaokeFolder}/musicas.txt` },
+      { directory: Directory.ExternalStorage, path: 'musicas.txt' },
+      { directory: Directory.ExternalStorage, path: 'karaoke/musicas.txt' },
       { directory: Directory.Documents, path: 'musicas.txt' },
       { directory: Directory.Data, path: 'musicas.txt' },
-      { directory: Directory.External, path: 'usb/musicas.txt' },
-      { directory: Directory.External, path: 'Downloads/musicas.txt' }
     ];
 
     for (const location of possibleLocations) {
@@ -131,10 +136,12 @@ export async function scanUSBForSongs(): Promise<Song[]> {
 
 // Função para obter o caminho do vídeo no USB
 export function getVideoPath(songId: number): string {
+  const karaokeFolderPath = getKaraokeFolderPath();
+  
   if (!Capacitor.isNativePlatform()) {
-    return `/usb/karaoke/${songId}.mp4`;
+    return `${karaokeFolderPath}/${songId}.mp4`;
   }
   
   // Em produção, retornar o caminho real do arquivo no USB
-  return `content://com.android.externalstorage.documents/tree/primary%3Akaraoke/${songId}.mp4`;
+  return `${karaokeFolderPath}/${songId}.mp4`;
 }

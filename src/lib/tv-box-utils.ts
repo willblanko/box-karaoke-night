@@ -1,5 +1,6 @@
 
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 // Check if we're running on a TV Box Android device
 export function isAndroidTVBox(): boolean {
@@ -30,13 +31,15 @@ export function adaptUIForScreenResolution(): void {
 // Real USB detection using Capacitor Filesystem
 export async function checkUSBConnection(): Promise<boolean> {
   try {
-    if (!isAndroidTVBox()) {
-      return false;
+    if (!Capacitor.isNativePlatform()) {
+      // Para desenvolvimento, simula a presença do USB
+      return true;
     }
 
+    // Em ambiente nativo, verifica diretórios externos
     const result = await Filesystem.readdir({
       path: '/storage',
-      directory: Directory.External
+      directory: Directory.ExternalStorage
     });
 
     return result.files.some(file => 
@@ -45,6 +48,7 @@ export async function checkUSBConnection(): Promise<boolean> {
     );
   } catch (error) {
     console.error('Error checking USB connection:', error);
+    // Em caso de erro, assume que não há conexão
     return false;
   }
 }
@@ -67,9 +71,40 @@ export function listenForUSBConnection(callback: (isConnected: boolean) => void)
 // Function to list available storage directories
 export async function listStorageDirectories(path: string = '/'): Promise<Array<{ name: string; path: string; isDirectory: boolean }>> {
   try {
+    // Em desenvolvimento, retorna diretórios simulados para teste
+    if (!Capacitor.isNativePlatform()) {
+      if (path === '/') {
+        return [
+          { name: 'storage', path: '/storage', isDirectory: true },
+          { name: 'sdcard', path: '/sdcard', isDirectory: true }
+        ];
+      } else if (path === '/storage') {
+        return [
+          { name: 'emulated', path: '/storage/emulated', isDirectory: true },
+          { name: 'usb', path: '/storage/usb', isDirectory: true }
+        ];
+      } else if (path === '/storage/usb') {
+        return [
+          { name: 'karaoke', path: '/storage/usb/karaoke', isDirectory: true },
+          { name: 'videos', path: '/storage/usb/videos', isDirectory: true },
+          { name: 'musicas.txt', path: '/storage/usb/musicas.txt', isDirectory: false }
+        ];
+      } else if (path === '/storage/usb/karaoke') {
+        return [
+          { name: '1001.mp4', path: '/storage/usb/karaoke/1001.mp4', isDirectory: false },
+          { name: '1002.mp4', path: '/storage/usb/karaoke/1002.mp4', isDirectory: false },
+          { name: '1003.mp4', path: '/storage/usb/karaoke/1003.mp4', isDirectory: false }
+        ];
+      } else {
+        // Para outros caminhos, retorna uma lista vazia
+        return [];
+      }
+    }
+
+    // Em ambiente nativo, acessa realmente o sistema de arquivos
     const result = await Filesystem.readdir({
       path: path,
-      directory: Directory.External
+      directory: Directory.ExternalStorage
     });
 
     return result.files.map(file => ({
@@ -81,4 +116,18 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
     console.error('Error listing directories:', error);
     return [];
   }
+}
+
+// Obtem a pasta configurada para o Karaoke
+export function getKaraokeFolderPath(): string {
+  // Tenta obter do localStorage
+  const savedPath = localStorage.getItem('karaokeFolderPath');
+  
+  // Se encontrou um caminho salvo, use-o
+  if (savedPath) {
+    return savedPath;
+  }
+  
+  // Caso contrário, retorna um caminho padrão
+  return Capacitor.isNativePlatform() ? '/storage' : '/storage/usb/karaoke';
 }
