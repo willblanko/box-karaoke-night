@@ -1,3 +1,4 @@
+
 /**
  * Utilitário para interação com o sistema de arquivos
  * Nota: Este é um exemplo mock. Para uso real com USB em um TV Box Android,
@@ -7,6 +8,7 @@
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
+import { Capacitor } from '@capacitor/core';
 
 // Função para ler o arquivo musicas.txt e extrair os metadados
 async function parseSongMetadata(content: string): Promise<Song[]> {
@@ -44,7 +46,7 @@ export async function scanUSBForSongs(): Promise<Song[]> {
   
   try {
     // Em desenvolvimento web, usar dados mock
-    if (!window.Capacitor) {
+    if (!Capacitor.isNativePlatform()) {
       await new Promise(resolve => setTimeout(resolve, 1500));
       return [
         { id: 1, title: "Evidências", artist: "Chitãozinho & Xororó", duration: 240, videoPath: "/usb/karaoke/1.mp4" },
@@ -63,7 +65,12 @@ export async function scanUSBForSongs(): Promise<Song[]> {
       directory: Directory.ExternalStorage
     });
 
-    const songs = await parseSongMetadata(result.data);
+    // Converter o resultado para string, já que pode ser string ou Blob
+    const content = typeof result.data === 'string' 
+      ? result.data 
+      : await new Blob([result.data]).text();
+      
+    const songs = await parseSongMetadata(content);
     console.log(`Encontradas ${songs.length} músicas no banco de dados`);
     return songs;
     
@@ -75,7 +82,7 @@ export async function scanUSBForSongs(): Promise<Song[]> {
 
 // Função para obter o caminho do vídeo no USB
 export function getVideoPath(songId: number): string {
-  if (!window.Capacitor) {
+  if (!Capacitor.isNativePlatform()) {
     return `/usb/karaoke/${songId}.mp4`;
   }
   
