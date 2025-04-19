@@ -27,7 +27,8 @@ export const useKaraokeSongs = () => {
   };
 
   useEffect(() => {
-    const cleanup = listenForUSBConnection((connected) => {
+    // Store the cleanup function returned by listenForUSBConnection
+    const unsubscribe = listenForUSBConnection((connected) => {
       setIsUSBConnected(connected);
       if (connected) {
         loadSongsFromUSB();
@@ -36,9 +37,10 @@ export const useKaraokeSongs = () => {
       }
     });
 
+    // Return the cleanup function
     return () => {
-      if (typeof cleanup === 'function') {
-        cleanup();
+      if (unsubscribe) {
+        unsubscribe();
       }
     };
   }, []);

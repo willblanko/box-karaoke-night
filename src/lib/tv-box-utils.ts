@@ -1,3 +1,4 @@
+
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
 // Check if we're running on a TV Box Android device
@@ -49,7 +50,7 @@ export async function checkUSBConnection(): Promise<boolean> {
 }
 
 // Listen for USB connection changes
-export function listenForUSBConnection(callback: (isConnected: boolean) => void): void {
+export function listenForUSBConnection(callback: (isConnected: boolean) => void): () => void {
   // Initial check
   checkUSBConnection().then(callback);
 
@@ -59,7 +60,7 @@ export function listenForUSBConnection(callback: (isConnected: boolean) => void)
     callback(isConnected);
   }, 2000);
 
-  // Clean up on unmount
+  // Clean up on unmount - Return a function that clears the interval
   return () => clearInterval(interval);
 }
 
