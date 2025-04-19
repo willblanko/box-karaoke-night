@@ -1,12 +1,24 @@
+
 import React, { useRef, useEffect } from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
 import { formatTimeDisplay } from "@/lib/karaoke-utils";
 import { Capacitor } from '@capacitor/core';
 import { Button } from "./ui/button";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Pause, Play, RotateCcw, SkipForward, SkipBack } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const VideoPlayer: React.FC = () => {
-  const { currentSong, playerState, setPlayerState } = useKaraoke();
+  const { currentSong, playerState, setPlayerState, skipSong, queue, playPrevious } = useKaraoke();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -109,12 +121,12 @@ export const VideoPlayer: React.FC = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (video.paused) {
-      video.play();
-      setPlayerState('playing');
-    } else {
+    if (playerState === 'playing') {
       video.pause();
       setPlayerState('paused');
+    } else {
+      video.play().catch(console.error);
+      setPlayerState('playing');
     }
   };
 
@@ -123,7 +135,7 @@ export const VideoPlayer: React.FC = () => {
     if (!video) return;
     
     video.currentTime = 0;
-    video.play();
+    video.play().catch(console.error);
     setPlayerState('playing');
   };
 
@@ -169,6 +181,43 @@ export const VideoPlayer: React.FC = () => {
               >
                 <RotateCcw size={24} />
               </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20"
+                onClick={playPrevious}
+                disabled={!playPrevious}
+              >
+                <SkipBack size={24} />
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20"
+                    disabled={queue.length === 0}
+                  >
+                    <SkipForward size={24} />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Pular música atual?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja pular para a próxima música?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={skipSong}>
+                      Confirmar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
             
             <p className="text-tv-sm text-white/80">

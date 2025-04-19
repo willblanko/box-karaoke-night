@@ -12,11 +12,13 @@ export interface KaraokeContextData {
   isUSBConnected: boolean;
   pendingSong: Song | null;
   karaokeFolderPath: string;
+  previousSongs: Song[];
   
   addToQueue: (song: Song) => void;
   removeFromQueue: (index: number) => void;
   skipSong: () => void;
   playNext: () => void;
+  playPrevious: () => void;
   setSearchInput: (input: string) => void;
   searchSongByNumber: (number: string) => Song | undefined;
   setPlayerState: (state: PlayerState) => void;

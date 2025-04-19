@@ -3,6 +3,7 @@ import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
 import { useKaraokeSongs } from "@/hooks/useKaraokeSongs";
 import { useKaraokePerformance } from "@/hooks/useKaraokePerformance";
+import { Song } from "@/lib/types";
 
 const KaraokeContext = createContext<KaraokeContextData | undefined>(undefined);
 
@@ -17,7 +18,8 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     currentSong,
     addToQueue,
     removeFromQueue,
-    playNext
+    playNext: playNextFromQueue,
+    setCurrentSong
   } = useKaraokeQueue();
 
   const {
@@ -42,6 +44,35 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   // Make sure any useRef hooks are called before useEffect
   const effectRan = useRef(false);
   const skipInProgress = useRef(false);
+
+  const [previousSongs, setPreviousSongs] = React.useState<Song[]>([]);
+
+  const playNext = () => {
+    if (currentSong) {
+      setPreviousSongs(prev => [...prev, currentSong]);
+    }
+    
+    if (queue.length > 0) {
+      const nextSong = queue[0];
+      setCurrentSong(nextSong);
+      setQueue(prev => prev.filter((_, i) => i !== 0));
+      return true;
+    } else {
+      setCurrentSong(null);
+      return false;
+    }
+  };
+
+  const playPrevious = () => {
+    if (previousSongs.length > 0) {
+      const lastSong = previousSongs[previousSongs.length - 1];
+      if (currentSong) {
+        setQueue(prev => [currentSong, ...prev]);
+      }
+      setCurrentSong(lastSong);
+      setPreviousSongs(prev => prev.slice(0, -1));
+    }
+  };
 
   const skipSong = () => {
     if (skipInProgress.current) return; // Previne múltiplos skips
@@ -116,7 +147,9 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     confirmAndPlaySong,
     cancelPendingSong,
     loadSongsFromUSB,
-    karaokeFolderPath
+    karaokeFolderPath,
+    playPrevious,
+    previousSongs
   };
 
   return (
