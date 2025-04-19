@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
 
-## Project info
+# Karaoke Box - Aplicativo para TV Box Android
 
-**URL**: https://lovable.dev/projects/45a37de9-3bab-46e5-8638-30a7532e3cec
+Um aplicativo de karaoke para TV Box Android com resolução adaptável para 720p e 1080p, que reproduz vídeos de um drive USB conectado.
 
-## How can I edit this code?
+## Funcionalidades
 
-There are several ways of editing your application.
+- Interface adaptada para TV Box Android (720p e 1080p)
+- Entrada de número da música via controle remoto
+- Reprodução de vídeos de karaoke do drive USB
+- Sistema de fila para adicionar várias músicas
+- Navegação por teclas direcionais (seta para direita avança música)
+- Sistema de notas aleatórias com mensagens ao final de cada música
+- Interface otimizada para controle remoto
 
-**Use Lovable**
+## Como usar
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/45a37de9-3bab-46e5-8638-30a7532e3cec) and start prompting.
+1. Conecte um drive USB com vídeos de karaoke à sua TV Box Android
+2. Inicie o aplicativo
+3. Digite o número da música desejada
+4. Use a tecla direcional direita para pular para a próxima música
 
-Changes made via Lovable will be committed automatically to this repo.
+## Requisitos técnicos
 
-**Use your preferred IDE**
+- TV Box Android com Android 6.0 ou superior
+- Suporte a resoluções de 720p e 1080p
+- Drive USB com vídeos de karaoke
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Observações importantes
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Os vídeos devem estar na raiz do drive USB
+- Os nomes dos arquivos devem corresponder aos números das músicas (ex.: 1.mp4, 123.mp4)
+- Recomenda-se manter um arquivo de índice no drive USB para facilitar a busca
 
-Follow these steps:
+## Desenvolvimento
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
+Este projeto foi construído com:
 - React
-- shadcn-ui
+- TypeScript
 - Tailwind CSS
+- shadcn/ui
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/45a37de9-3bab-46e5-8638-30a7532e3cec) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Para uma implementação completa em TV Box Android, seria necessário:
+1. Empacotar como aplicativo Android
+2. Implementar APIs nativas para acesso ao sistema de arquivos
+3. Configurar permissões para leitura de USB
+4. Implementar detecção de dispositivos USB

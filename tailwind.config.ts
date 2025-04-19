@@ -18,6 +18,33 @@ export default {
 			}
 		},
 		extend: {
+			fontSize: {
+				'tv-xs': 'clamp(0.75rem, 1.5vw, 1rem)',
+				'tv-sm': 'clamp(0.875rem, 2vw, 1.25rem)',
+				'tv-base': 'clamp(1rem, 2.5vw, 1.5rem)',
+				'tv-lg': 'clamp(1.25rem, 3vw, 1.75rem)',
+				'tv-xl': 'clamp(1.5rem, 3.5vw, 2rem)',
+				'tv-2xl': 'clamp(1.75rem, 4vw, 2.5rem)',
+				'tv-3xl': 'clamp(2rem, 5vw, 3rem)',
+				'tv-4xl': 'clamp(2.5rem, 6vw, 3.5rem)',
+				'tv-5xl': 'clamp(3rem, 7vw, 4rem)',
+			},
+			keyframes: {
+				// Adicionando animações personalizadas para o app de karaoke
+				'glow-pulse': {
+					'0%, 100%': { 
+						boxShadow: '0 0 5px 2px hsl(var(--primary))',
+						transform: 'scale(1)' 
+					},
+					'50%': { 
+						boxShadow: '0 0 15px 5px hsl(var(--primary))', 
+						transform: 'scale(1.05)' 
+					},
+				},
+				'slide-in-up': {
+					'0%': { transform: 'translateY(100%)', opacity: '0' },
+					'100%': { transform: 'translateY(0)', opacity: '1' }
+				},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -88,7 +115,9 @@ export default {
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'glow-pulse': 'glow-pulse 2s infinite ease-in-out',
+				'slide-in-up': 'slide-in-up 0.5s ease-out'
 			}
 		}
 	},
