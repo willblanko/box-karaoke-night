@@ -1,6 +1,5 @@
-
-import { Filesystem, Directory } from '@capacitor/core';
 import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 // Check if we're running on a TV Box Android device
 export function isAndroidTVBox(): boolean {

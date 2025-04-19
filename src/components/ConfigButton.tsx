@@ -11,7 +11,7 @@ import {
 import { Folder, ChevronRight, ChevronLeft, HardDrive, Settings } from "lucide-react";
 import { listStorageDirectories } from "@/lib/tv-box-utils";
 import { ScrollArea } from "./ui/scroll-area";
-import { Toast } from "sonner";
+import { toast } from "sonner"; // Fixed import from "sonner"
 import { useToast } from "./ui/use-toast";
 
 interface DirectoryItem {
