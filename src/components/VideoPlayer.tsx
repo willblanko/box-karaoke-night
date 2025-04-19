@@ -23,6 +23,7 @@ export const VideoPlayer: React.FC = () => {
 
     const handleEnded = () => {
       setPlayerState("ended");
+      document.exitFullscreen().catch(console.error);
     };
 
     videoElement.addEventListener("timeupdate", handleTimeUpdate);
@@ -36,34 +37,35 @@ export const VideoPlayer: React.FC = () => {
     };
   }, []);
 
-  // Atualizar o vídeo quando a música mudar
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
     if (currentSong) {
-      // Na implementação real, o caminho seria adaptado para o formato correto do USB
-      // O uso do mockPath abaixo é apenas para demonstração neste ambiente
       const mockPath = "https://example.com/sample-video.mp4";
-      videoElement.src = mockPath; // Seria currentSong.videoPath na implementação real
+      videoElement.src = mockPath;
       videoElement.load();
       
       if (playerState === "playing") {
-        videoElement.play().catch(err => {
-          console.error("Erro ao reproduzir vídeo:", err);
-          setPlayerState("idle");
-        });
+        videoElement.play()
+          .then(() => {
+            videoElement.requestFullscreen()
+              .catch(err => console.error("Erro ao entrar em tela cheia:", err));
+          })
+          .catch(err => {
+            console.error("Erro ao reproduzir vídeo:", err);
+            setPlayerState("idle");
+          });
       }
     } else {
       videoElement.src = "";
     }
   }, [currentSong, playerState]);
 
-  // Se não houver música, mostrar a tela padrão
   if (!currentSong) {
     return (
       <div className="w-full aspect-video bg-card/40 flex items-center justify-center rounded-lg">
-        <p className="text-tv-xl text-muted-foreground">Nenhuma música em reprodução</p>
+        <p className="text-tv-xl text-muted-foreground">Digite o número da música</p>
       </div>
     );
   }

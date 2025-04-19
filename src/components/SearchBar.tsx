@@ -1,6 +1,5 @@
 
-import React, { useState, KeyboardEvent } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, KeyboardEvent, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { useKaraoke } from "@/context/KaraokeContext";
 
@@ -9,24 +8,24 @@ export const SearchBar = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Aceitar apenas números
     const value = e.target.value.replace(/\D/g, '');
     setSearchInput(value);
     setError(null);
   };
 
-  const handleSearch = () => {
-    if (!searchInput) {
-      setError("Digite um número");
-      return;
+  // Auto-search as user types
+  useEffect(() => {
+    if (searchInput) {
+      const song = searchSongByNumber(searchInput);
+      if (!song) {
+        setError("Música não encontrada");
+      }
     }
-    
-    searchSongByNumber(searchInput);
-  };
+  }, [searchInput, searchSongByNumber]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+    if (e.key === 'Enter' && !error) {
+      searchSongByNumber(searchInput, true); // true indica para reproduzir
     }
   };
 
@@ -50,13 +49,6 @@ export const SearchBar = () => {
           </p>
         )}
       </div>
-      
-      <Button 
-        onClick={handleSearch}
-        size="lg" 
-        className="w-full py-7 text-tv-xl font-bold animate-glow-pulse">
-        Buscar Música
-      </Button>
     </div>
   );
 };
