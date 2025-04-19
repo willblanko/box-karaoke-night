@@ -11,7 +11,7 @@ export const USBStatus: React.FC = () => {
       {isLoading ? (
         <>
           <Loader2 size={18} className="animate-spin text-primary" />
-          <span className="text-tv-sm">Carregando músicas...</span>
+          <span className="text-tv-sm">Verificando USB...</span>
         </>
       ) : isUSBConnected ? (
         <>
@@ -20,8 +20,8 @@ export const USBStatus: React.FC = () => {
         </>
       ) : (
         <>
-          <AlertCircle size={18} className="text-destructive" />
-          <span className="text-tv-sm">USB não conectado</span>
+          <Usb size={18} className="text-red-500" />
+          <span className="text-tv-sm">USB desconectado</span>
         </>
       )}
     </div>

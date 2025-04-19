@@ -1,19 +1,12 @@
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
-/**
- * Utilitários específicos para TV Box Android
- * Estas funções seriam implementadas com APIs nativas Android
- * quando o aplicativo for convertido para um app Android real
- */
-
-// Função para verificar se estamos em uma TV Box Android
+// Check if we're running on a TV Box Android device
 export function isAndroidTVBox(): boolean {
-  // Em uma implementação real, isso detectaria o dispositivo e o sistema operacional
-  // Para desenvolvimento web, retornamos false
   const userAgent = navigator.userAgent.toLowerCase();
   return userAgent.includes('android') && (userAgent.includes('tv') || window.innerWidth >= 1280);
 }
 
-// Função para adaptar a interface baseada na resolução da tela
+// Function to adapt UI based on screen resolution
 export function adaptUIForScreenResolution(): void {
   const { innerWidth, innerHeight } = window;
   
@@ -33,31 +26,58 @@ export function adaptUIForScreenResolution(): void {
   console.log(`Adaptando UI para resolução: ${innerWidth}x${innerHeight}`);
 }
 
-// Na implementação real, para acessar o USB, seria necessário usar APIs Android:
-// 1. Solicitação de permissão para acessar armazenamento externo
-export function requestStoragePermission(): Promise<boolean> {
-  // Esta seria uma implementação real com APIs nativas Android
-  // Retorna mock para ambiente web
-  console.log("Solicitando permissão de armazenamento...");
-  return Promise.resolve(true);
+// Real USB detection using Capacitor Filesystem
+export async function checkUSBConnection(): Promise<boolean> {
+  try {
+    if (!isAndroidTVBox()) {
+      return false;
+    }
+
+    const result = await Filesystem.readdir({
+      path: '/storage',
+      directory: Directory.External
+    });
+
+    return result.files.some(file => 
+      file.name.toLowerCase().includes('usb') || 
+      file.name.toLowerCase().includes('otg')
+    );
+  } catch (error) {
+    console.error('Error checking USB connection:', error);
+    return false;
+  }
 }
 
-// 2. Detectar quando um dispositivo USB é conectado
-export function listenForUSBConnection(callback: () => void): void {
-  // Em uma implementação real, isso usaria BroadcastReceiver do Android
-  // Aqui apenas simulamos para desenvolvimento web
-  console.log("Configurando listener para conexão USB...");
-  
-  // Simular evento de conexão USB após 2 segundos
-  setTimeout(() => {
-    console.log("USB conectado (simulado)");
-    callback();
+// Listen for USB connection changes
+export function listenForUSBConnection(callback: (isConnected: boolean) => void): void {
+  // Initial check
+  checkUSBConnection().then(callback);
+
+  // Set up an interval to check periodically (every 2 seconds)
+  const interval = setInterval(async () => {
+    const isConnected = await checkUSBConnection();
+    callback(isConnected);
   }, 2000);
+
+  // Clean up on unmount
+  return () => clearInterval(interval);
 }
 
-// 3. Obter caminhos de dispositivos USB montados
-export function getUSBMountPath(): Promise<string> {
-  // Em um TV Box Android real, retornaria algo como:
-  // "/storage/usb0" ou "/mnt/usb"
-  return Promise.resolve("/storage/usb0");
+// Function to list available storage directories
+export async function listStorageDirectories(path: string = '/'): Promise<Array<{ name: string; path: string; isDirectory: boolean }>> {
+  try {
+    const result = await Filesystem.readdir({
+      path: path,
+      directory: Directory.External
+    });
+
+    return result.files.map(file => ({
+      name: file.name,
+      path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
+      isDirectory: file.type === 'directory'
+    }));
+  } catch (error) {
+    console.error('Error listing directories:', error);
+    return [];
+  }
 }

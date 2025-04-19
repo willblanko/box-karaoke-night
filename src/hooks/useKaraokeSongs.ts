@@ -12,24 +12,35 @@ export const useKaraokeSongs = () => {
   const [pendingSong, setPendingSong] = useState<Song | null>(null);
 
   const loadSongsFromUSB = async () => {
+    if (!isUSBConnected) return;
+    
     try {
       setIsLoading(true);
       const songs = await scanUSBForSongs();
       setAvailableSongs(songs);
-      setIsUSBConnected(true);
     } catch (error) {
       console.error("Erro ao carregar músicas do USB:", error);
+      setAvailableSongs([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    listenForUSBConnection(() => {
-      loadSongsFromUSB();
+    const cleanup = listenForUSBConnection((connected) => {
+      setIsUSBConnected(connected);
+      if (connected) {
+        loadSongsFromUSB();
+      } else {
+        setAvailableSongs([]);
+      }
     });
-    
-    loadSongsFromUSB();
+
+    return () => {
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, []);
 
   const searchSongByNumber = (number: string): Song | undefined => {
