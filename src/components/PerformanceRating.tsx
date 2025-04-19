@@ -12,7 +12,6 @@ export const PerformanceRating: React.FC = () => {
 
   const handleClose = () => {
     setWasSkipped(true);
-    setPlayerState('idle');
   };
 
   // Determinar cor da pontuação com base no valor
