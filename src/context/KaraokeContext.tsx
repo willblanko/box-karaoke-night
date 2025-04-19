@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Song, PlayerState, Performance } from "@/lib/types";
 import { generateRandomPerformance } from "@/lib/karaoke-utils";
@@ -22,7 +21,7 @@ interface KaraokeContextData {
   skipSong: () => void;
   playNext: () => void;
   setSearchInput: (input: string) => void;
-  searchSongByNumber: (number: string) => void;
+  searchSongByNumber: (number: string) => Song | undefined;
   setPlayerState: (state: PlayerState) => void;
 }
 
@@ -131,15 +130,17 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   };
 
   // Buscar música por número
-  const searchSongByNumber = (number: string) => {
+  const searchSongByNumber = (number: string): Song | undefined => {
     const songId = parseInt(number, 10);
-    if (isNaN(songId)) return;
+    if (isNaN(songId)) return undefined;
 
     const song = availableSongs.find(s => s.id === songId);
     if (song) {
       addToQueue(song);
       setSearchInput("");
+      return song;
     }
+    return undefined;
   };
 
   // Detectar quando uma música termina para mostrar avaliação e reproduzir a próxima

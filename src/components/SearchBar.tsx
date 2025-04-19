@@ -25,7 +25,8 @@ export const SearchBar = () => {
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !error) {
-      searchSongByNumber(searchInput, true); // true indica para reproduzir
+      // Play the song directly when Enter is pressed
+      searchSongByNumber(searchInput);
     }
   };
 
