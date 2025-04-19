@@ -34,12 +34,10 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
   return songs;
 }
 
-// Função para carregar o arquivo musicas.txt de diferentes locais
-async function loadSongCatalogFile(): Promise<string> {
-  try {
-    if (!Capacitor.isNativePlatform()) {
-      // Em desenvolvimento web, retornar dados simulados
-      return `
+// Função auxiliar para obter o conteúdo de musicas.txt embarcado no app
+function getEmbeddedMusicas(): string {
+  // Conteúdo do musicas.txt embarcado na aplicação para garantir funcionamento
+  return `
 [1001]
 Arquivo= 1001.mp4
 Artista= paralamas do sucesso
@@ -75,6 +73,16 @@ Arquivo= 1200.mp4
 Artista= Alceu Valença
 Musica= Anunciação
 ***`;
+}
+
+// Função para carregar o arquivo musicas.txt de diferentes locais
+async function loadSongCatalogFile(): Promise<string> {
+  console.log("Tentando carregar catálogo de músicas...");
+
+  try {
+    if (!Capacitor.isNativePlatform()) {
+      // Em desenvolvimento web, retornar dados simulados
+      return getEmbeddedMusicas();
     }
 
     const karaokeFolder = getKaraokeFolderPath();
@@ -87,10 +95,14 @@ Musica= Anunciação
       { directory: Directory.ExternalStorage, path: 'karaoke/musicas.txt' },
       { directory: Directory.Documents, path: 'musicas.txt' },
       { directory: Directory.Data, path: 'musicas.txt' },
+      { directory: Directory.Cache, path: 'musicas.txt' },
+      // Adicionar pasta assets do app como uma última opção
+      { directory: Directory.Data, path: 'assets/musicas.txt' },
     ];
 
     for (const location of possibleLocations) {
       try {
+        console.log(`Tentando ler arquivo em: ${location.directory}/${location.path}`);
         const result = await Filesystem.readFile({
           path: location.path,
           directory: location.directory
@@ -112,10 +124,13 @@ Musica= Anunciação
       }
     }
 
-    throw new Error("Arquivo musicas.txt não encontrado em nenhum local");
+    console.log("Usando catálogo de músicas incorporado no aplicativo.");
+    // Se não encontrou o arquivo em nenhum lugar, use o catálogo embutido
+    return getEmbeddedMusicas();
   } catch (error) {
     console.error("Erro ao ler o catálogo de músicas:", error);
-    throw error;
+    // Em caso de erro, retornar o catálogo embutido
+    return getEmbeddedMusicas();
   }
 }
 

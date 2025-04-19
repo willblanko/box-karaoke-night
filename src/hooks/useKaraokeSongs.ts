@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Song } from '@/lib/types';
 import { scanUSBForSongs } from '@/lib/file-system';
 import { listenForUSBConnection, getKaraokeFolderPath } from '@/lib/tv-box-utils';
@@ -13,17 +13,10 @@ export const useKaraokeSongs = () => {
   const [pendingSong, setPendingSong] = useState<Song | null>(null);
   const [karaokeFolderPath, setKaraokeFolderPath] = useState(getKaraokeFolderPath());
   const { toast } = useToast();
+  const errorShown = useRef(false);
 
   const loadSongsFromUSB = async () => {
-    if (!isUSBConnected) {
-      toast({
-        title: "Erro",
-        description: "USB não conectado. Conecte um dispositivo USB.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+    // Remove the USB check to allow loading songs regardless of USB connection status
     try {
       setIsLoading(true);
       const songs = await scanUSBForSongs();
@@ -39,14 +32,19 @@ export const useKaraokeSongs = () => {
           title: "Sucesso",
           description: `${songs.length} músicas carregadas com sucesso.`,
         });
+        // Reset error flag if we successfully loaded songs
+        errorShown.current = false;
       }
     } catch (error) {
-      console.error("Erro ao carregar músicas do USB:", error);
-      toast({
-        title: "Erro",
-        description: "Falha ao carregar o catálogo de músicas.",
-        variant: "destructive"
-      });
+      console.error("Erro ao carregar músicas:", error);
+      if (!errorShown.current) {
+        toast({
+          title: "Erro",
+          description: "Falha ao carregar o catálogo de músicas.",
+          variant: "destructive"
+        });
+        errorShown.current = true;
+      }
       setAvailableSongs([]);
     } finally {
       setIsLoading(false);
@@ -70,17 +68,20 @@ export const useKaraokeSongs = () => {
   }, [karaokeFolderPath]);
 
   useEffect(() => {
-    // Store the cleanup function returned by listenForUSBConnection
+    // Load songs on mount regardless of USB status
+    loadSongsFromUSB();
+    
+    // Add USB connection listener with less aggressive notifications
     const unsubscribe = listenForUSBConnection((connected) => {
+      const wasConnected = isUSBConnected;
       setIsUSBConnected(connected);
-      if (connected) {
+      
+      // Only reload songs if connection state changed from disconnected to connected
+      if (connected && !wasConnected) {
         loadSongsFromUSB();
-      } else {
-        setAvailableSongs([]);
       }
     });
 
-    // Return the cleanup function
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -116,7 +117,7 @@ export const useKaraokeSongs = () => {
     pendingSong,
     setPendingSong,
     searchSongByNumber,
-    loadSongsFromUSB, // Expor esta função para permitir recargas manuais
+    loadSongsFromUSB,
     karaokeFolderPath
   };
 };

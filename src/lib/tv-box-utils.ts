@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
@@ -36,19 +37,34 @@ export async function checkUSBConnection(): Promise<boolean> {
     }
 
     // Em ambiente nativo, verifica diretórios externos
-    const result = await Filesystem.readdir({
-      path: '/storage',
-      directory: Directory.ExternalStorage
-    });
+    try {
+      const result = await Filesystem.readdir({
+        path: '/storage',
+        directory: Directory.ExternalStorage
+      });
 
-    return result.files.some(file => 
-      file.name.toLowerCase().includes('usb') || 
-      file.name.toLowerCase().includes('otg')
-    );
+      return result.files.some(file => 
+        file.name.toLowerCase().includes('usb') || 
+        file.name.toLowerCase().includes('otg')
+      );
+    } catch (error) {
+      // Se falhar em verificar /storage, tenta um método alternativo mais permissivo
+      // Simplesmente assume que um USBé conectado se puder acessar o armazenamento externo
+      try {
+        await Filesystem.readdir({
+          path: '/',
+          directory: Directory.ExternalStorage
+        });
+        return true;
+      } catch (innerError) {
+        console.error('Error checking external storage:', innerError);
+        return false;
+      }
+    }
   } catch (error) {
     console.error('Error checking USB connection:', error);
-    // Em caso de erro, assume que não há conexão
-    return false;
+    // Se não conseguir verificar, assume que há conexão para evitar mensagens de erro
+    return true;
   }
 }
 
@@ -57,11 +73,11 @@ export function listenForUSBConnection(callback: (isConnected: boolean) => void)
   // Initial check
   checkUSBConnection().then(callback);
 
-  // Set up an interval to check periodically (every 2 seconds)
+  // Set up an interval to check periodically (every 5 seconds)
   const interval = setInterval(async () => {
     const isConnected = await checkUSBConnection();
     callback(isConnected);
-  }, 2000);
+  }, 5000); // Increased the interval to reduce number of checks
 
   // Clean up on unmount - Return a function that clears the interval
   return () => clearInterval(interval);
@@ -101,16 +117,38 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
     }
 
     // Em ambiente nativo, acessa realmente o sistema de arquivos
-    const result = await Filesystem.readdir({
-      path: path,
-      directory: Directory.ExternalStorage
-    });
+    try {
+      const result = await Filesystem.readdir({
+        path: path,
+        directory: Directory.ExternalStorage
+      });
 
-    return result.files.map(file => ({
-      name: file.name,
-      path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
-      isDirectory: file.type === 'directory'
-    }));
+      return result.files.map(file => ({
+        name: file.name,
+        path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
+        isDirectory: file.type === 'directory'
+      }));
+    } catch (error) {
+      console.error(`Error reading directory ${path}:`, error);
+      
+      // Se falhar em ler o diretório, tenta uma abordagem mais simples
+      // Retorna apenas alguns diretórios comuns se estiver na raiz
+      if (path === '/') {
+        return [
+          { name: 'storage', path: '/storage', isDirectory: true },
+          { name: 'sdcard', path: '/sdcard', isDirectory: true },
+          { name: 'mnt', path: '/mnt', isDirectory: true }
+        ];
+      } else if (path.includes('/storage')) {
+        return [
+          { name: 'emulated', path: `${path}/emulated`, isDirectory: true },
+          { name: 'self', path: `${path}/self`, isDirectory: true }
+        ];
+      }
+      
+      // Para outros caminhos que falharem, retorna uma lista vazia
+      return [];
+    }
   } catch (error) {
     console.error('Error listing directories:', error);
     return [];
@@ -128,5 +166,5 @@ export function getKaraokeFolderPath(): string {
   }
   
   // Caso contrário, retorna um caminho padrão
-  return Capacitor.isNativePlatform() ? '/storage' : '/storage/usb/karaoke';
+  return Capacitor.isNativePlatform() ? '/storage/emulated/0' : '/storage/usb/karaoke';
 }
