@@ -1,47 +1,64 @@
 
 # Karaoke Box - Aplicativo para TV Box Android
 
-Um aplicativo de karaoke para TV Box Android com resolução adaptável para 720p e 1080p, que reproduz vídeos de um drive USB conectado.
+Aplicativo de karaoke projetado especificamente para TV Box Android, com suporte a reprodução de vídeos de um pendrive USB.
 
-## Funcionalidades
+## Requisitos Técnicos
 
-- Interface adaptada para TV Box Android (720p e 1080p)
-- Entrada de número da música via controle remoto
-- Reprodução de vídeos de karaoke do drive USB
-- Sistema de fila para adicionar várias músicas
-- Navegação por teclas direcionais (seta para direita avança música)
-- Sistema de notas aleatórias com mensagens ao final de cada música
-- Interface otimizada para controle remoto
+- TV Box Android (versão 6.0 ou superior)
+- Pendrive USB com pasta de vídeos de karaoke
+- Resolução de tela: 720p ou 1080p
 
-## Como usar
+## Preparação do Pendrive USB
 
-1. Conecte um drive USB com vídeos de karaoke à sua TV Box Android
-2. Inicie o aplicativo
-3. Digite o número da música desejada
-4. Use a tecla direcional direita para pular para a próxima música
+1. Crie uma pasta chamada `karaoke` na raiz do pendrive
+2. Adicione arquivos de vídeo de karaoke no formato `.mp4`
+3. Crie um arquivo `musicas.txt` na raiz do pendrive com os metadados das músicas
 
-## Requisitos técnicos
+### Formato do arquivo `musicas.txt`
 
-- TV Box Android com Android 6.0 ou superior
-- Suporte a resoluções de 720p e 1080p
-- Drive USB com vídeos de karaoke
+Exemplo de estrutura:
+```
+[1001]
+Arquivo= 1001.mp4
+Artista= Nome do Artista
+Musica= Nome da Música
+***
+[1002]
+Arquivo= 1002.mp4
+Artista= Outro Artista
+Musica= Título da Música
+***
+```
 
-## Observações importantes
+## Instalação e Execução
 
-- Os vídeos devem estar na raiz do drive USB
-- Os nomes dos arquivos devem corresponder aos números das músicas (ex.: 1.mp4, 123.mp4)
-- Recomenda-se manter um arquivo de índice no drive USB para facilitar a busca
+### Desenvolvimento
 
-## Desenvolvimento
+1. Clone o repositório
+2. Instale as dependências: `npm install`
+3. Adicione a plataforma Android: `npx cap add android`
+4. Sincronize o projeto: `npx cap sync`
+5. Construa o aplicativo: `npm run build`
+6. Execute no emulador: `npx cap run android`
 
-Este projeto foi construído com:
+### Implantação em TV Box
+
+1. Gere o APK: `npm run build && npx cap build android`
+2. Transfira o APK para o dispositivo
+3. Instale o aplicativo
+4. Conecte o pendrive USB com os vídeos de karaoke
+
+## Notas Importantes
+
+- Todos os vídeos devem estar na pasta `karaoke` do pendrive
+- Nomes de arquivo devem corresponder aos IDs no `musicas.txt`
+- Suporte para vídeos `.mp4`
+- Navegação via controle remoto da TV Box
+
+## Tecnologias
+
 - React
 - TypeScript
+- Capacitor
 - Tailwind CSS
-- shadcn/ui
-
-Para uma implementação completa em TV Box Android, seria necessário:
-1. Empacotar como aplicativo Android
-2. Implementar APIs nativas para acesso ao sistema de arquivos
-3. Configurar permissões para leitura de USB
-4. Implementar detecção de dispositivos USB
