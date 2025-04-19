@@ -17,11 +17,18 @@ export const SearchBar = () => {
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchInput) {
       console.log(`Buscando música pelo número: ${searchInput}`);
+      
+      // Prevenir comportamento padrão do formulário
+      e.preventDefault();
+      
       // Busca a música SOMENTE quando Enter é pressionado
       const song = searchSongByNumber(searchInput);
       if (!song) {
         setError("Música não encontrada");
       }
+      
+      // Não limpar o input imediatamente, isso será feito quando a música for confirmada
+      // ou cancelada no diálogo de confirmação
     }
   };
 

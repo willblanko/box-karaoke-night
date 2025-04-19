@@ -18,7 +18,12 @@ export const SongConfirmationDialog: React.FC = () => {
   const { pendingSong, confirmAndPlaySong, cancelPendingSong } = useKaraoke();
   
   return (
-    <AlertDialog open={pendingSong !== null}>
+    <AlertDialog open={pendingSong !== null} onOpenChange={(open) => {
+      if (!open && pendingSong) {
+        // Se o diálogo foi fechado pelo Escape ou clicando fora, tratamos como cancelamento
+        cancelPendingSong();
+      }
+    }}>
       <AlertDialogContent className="bg-card/95 border-primary/20">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-tv-2xl flex items-center gap-2">

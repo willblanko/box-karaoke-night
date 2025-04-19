@@ -53,13 +53,24 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
 
   const confirmAndPlaySong = () => {
     if (pendingSong) {
-      addToQueue(pendingSong);
+      const startedPlaying = addToQueue(pendingSong);
+      
+      if (startedPlaying) {
+        console.log(`Iniciando música: ${pendingSong.title}`);
+        setPlayerState('playing');
+      } else {
+        console.log(`Música adicionada à fila: ${pendingSong.title}`);
+      }
+      
       setPendingSong(null);
+      setSearchInput(''); // Limpa o input apenas quando confirma
     }
   };
 
   const cancelPendingSong = () => {
+    console.log('Cancelando seleção de música');
     setPendingSong(null);
+    setSearchInput(''); // Limpa o input quando cancela
   };
 
   // Handle keyboard navigation

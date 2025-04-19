@@ -15,6 +15,7 @@ export const useKaraokeSongs = () => {
   const { toast } = useToast();
   const errorShown = useRef(false);
   const initialLoadDone = useRef(false);
+  const searchInProgress = useRef(false);
 
   const loadSongsFromUSB = async () => {
     // Evita múltiplos carregamentos simultâneos
@@ -94,21 +95,37 @@ export const useKaraokeSongs = () => {
   }, []);
 
   const searchSongByNumber = (number: string): Song | undefined => {
-    const songId = parseInt(number, 10);
-    if (isNaN(songId)) return undefined;
+    // Evitar múltiplas buscas simultâneas
+    if (searchInProgress.current) return undefined;
+    
+    searchInProgress.current = true;
+    
+    try {
+      const songId = parseInt(number, 10);
+      if (isNaN(songId)) return undefined;
 
-    const song = availableSongs.find(s => s.id === songId);
-    if (song) {
-      setPendingSong(song);
-      setSearchInput('');
-      return song;
-    } else {
-      toast({
-        title: "Música não encontrada",
-        description: `Música com número ${songId} não está disponível.`,
-        variant: "destructive"
-      });
+      console.log(`Buscando música #${songId} no catálogo de ${availableSongs.length} músicas`);
+      
+      const song = availableSongs.find(s => s.id === songId);
+      if (song) {
+        console.log(`Música encontrada: "${song.title}" por ${song.artist}`);
+        setPendingSong(song);
+        return song;
+      } else {
+        console.log(`Música #${songId} não encontrada no catálogo`);
+        toast({
+          title: "Música não encontrada",
+          description: `Música com número ${songId} não está disponível.`,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      // Garantir que o flag é sempre resetado
+      setTimeout(() => {
+        searchInProgress.current = false;
+      }, 500);
     }
+    
     return undefined;
   };
 
