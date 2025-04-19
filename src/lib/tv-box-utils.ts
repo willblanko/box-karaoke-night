@@ -82,87 +82,35 @@ export function listenForUSBConnection(callback: (isConnected: boolean) => void)
   return () => clearInterval(interval);
 }
 
-// Function to list available storage directories
-export async function listStorageDirectories(path: string = '/'): Promise<Array<{ name: string; path: string; isDirectory: boolean }>> {
-  try {
-    // Em desenvolvimento, retorna diretórios simulados para teste
-    if (!Capacitor.isNativePlatform()) {
-      if (path === '/') {
-        return [
-          { name: 'storage', path: '/storage', isDirectory: true },
-          { name: 'sdcard', path: '/sdcard', isDirectory: true }
-        ];
-      } else if (path === '/storage') {
-        return [
-          { name: 'emulated', path: '/storage/emulated', isDirectory: true },
-          { name: 'usb', path: '/storage/usb', isDirectory: true }
-        ];
-      } else if (path === '/storage/usb') {
-        return [
-          { name: 'karaoke', path: '/storage/usb/karaoke', isDirectory: true },
-          { name: 'videos', path: '/storage/usb/videos', isDirectory: true },
-          { name: 'musicas.txt', path: '/storage/usb/musicas.txt', isDirectory: false }
-        ];
-      } else if (path === '/storage/usb/karaoke') {
-        return [
-          { name: '1001.mp4', path: '/storage/usb/karaoke/1001.mp4', isDirectory: false },
-          { name: '1002.mp4', path: '/storage/usb/karaoke/1002.mp4', isDirectory: false },
-          { name: '1003.mp4', path: '/storage/usb/karaoke/1003.mp4', isDirectory: false }
-        ];
-      } else {
-        // Para outros caminhos, retorna uma lista vazia
-        return [];
-      }
-    }
-
-    // Em ambiente nativo, acessa realmente o sistema de arquivos
-    try {
-      const result = await Filesystem.readdir({
-        path: path,
-        directory: Directory.ExternalStorage
-      });
-
-      return result.files.map(file => ({
-        name: file.name,
-        path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
-        isDirectory: file.type === 'directory'
-      }));
-    } catch (error) {
-      console.error(`Error reading directory ${path}:`, error);
-      
-      // Se falhar em ler o diretório, tenta uma abordagem mais simples
-      // Retorna apenas alguns diretórios comuns se estiver na raiz
-      if (path === '/') {
-        return [
-          { name: 'storage', path: '/storage', isDirectory: true },
-          { name: 'sdcard', path: '/sdcard', isDirectory: true },
-          { name: 'mnt', path: '/mnt', isDirectory: true }
-        ];
-      } else if (path.includes('/storage')) {
-        return [
-          { name: 'emulated', path: `${path}/emulated`, isDirectory: true },
-          { name: 'self', path: `${path}/self`, isDirectory: true }
-        ];
-      }
-      
-      // Para outros caminhos que falharem, retorna uma lista vazia
-      return [];
-    }
-  } catch (error) {
-    console.error('Error listing directories:', error);
-    return [];
-  }
-}
-
 // Obtem a pasta configurada para o Karaoke
 export function getKaraokeFolderPath(): string {
-  // Tenta obter do localStorage
   const savedPath = localStorage.getItem('karaokeFolderPath');
-  
-  if (savedPath) {
-    return savedPath;
+  return savedPath || '/storage/emulated/0/karaoke';
+}
+
+// Function to list available storage directories for karaoke folder selection
+export async function listStorageDirectories(path: string = '/'): Promise<Array<{ name: string; path: string; isDirectory: boolean }>> {
+  try {
+    if (!Capacitor.isNativePlatform()) {
+      // Retorna diretórios simulados para desenvolvimento
+      return [
+        { name: 'storage', path: '/storage', isDirectory: true },
+        { name: 'sdcard', path: '/sdcard', isDirectory: true }
+      ];
+    }
+
+    const result = await Filesystem.readdir({
+      path: path,
+      directory: Directory.ExternalStorage
+    });
+
+    return result.files.map(file => ({
+      name: file.name,
+      path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
+      isDirectory: file.type === 'directory'
+    }));
+  } catch (error) {
+    console.error('Erro ao listar diretórios:', error);
+    return [];
   }
-  
-  // Caminho padrão para a pasta de karaoke
-  return '/storage/emulated/0/karaoke';
 }
