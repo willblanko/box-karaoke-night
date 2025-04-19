@@ -11,6 +11,13 @@ export const KeyboardNavigation: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Evita processar eventos quando estamos em inputs focados
+      if (document.activeElement && 
+          (document.activeElement.tagName === 'INPUT' || 
+           document.activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      
       // Teclas de navegação para controle remoto
       switch (e.key) {
         case "ArrowRight":

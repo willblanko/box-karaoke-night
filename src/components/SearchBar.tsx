@@ -7,6 +7,7 @@ export const SearchBar = () => {
   const { searchInput, setSearchInput, searchSongByNumber } = useKaraoke();
   const [error, setError] = useState<string | null>(null);
   const inputProcessedRef = useRef<boolean>(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Verificar se o evento já foi processado para evitar duplicação
@@ -22,26 +23,34 @@ export const SearchBar = () => {
     setSearchInput(value);
     setError(null);
     
+    // Limpar timeout anterior se existir
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
     // Resetar a flag após o processamento
     setTimeout(() => {
       inputProcessedRef.current = false;
     }, 0);
   };
 
-  // Auto-search as user types
-  useEffect(() => {
-    if (searchInput) {
+  // Não precisamos mais realizar a busca automática enquanto digita
+  // useEffect(() => {
+  //   if (searchInput) {
+  //     const song = searchSongByNumber(searchInput);
+  //     if (!song) {
+  //       setError("Música não encontrada");
+  //     }
+  //   }
+  // }, [searchInput, searchSongByNumber]);
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchInput) {
+      // Busca a música quando Enter é pressionado
       const song = searchSongByNumber(searchInput);
       if (!song) {
         setError("Música não encontrada");
       }
-    }
-  }, [searchInput, searchSongByNumber]);
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !error) {
-      // Busca a música quando Enter é pressionado
-      searchSongByNumber(searchInput);
     }
   };
 
