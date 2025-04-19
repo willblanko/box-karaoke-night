@@ -1,4 +1,3 @@
-
 import React from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -32,11 +31,9 @@ const KaraokeContent: React.FC = () => {
         <div className="lg:flex-1">
           <VideoPlayer />
           
-          {(!currentSong || playerState !== "playing") && (
-            <div className="mt-6 flex justify-center">
-              <SearchBar />
-            </div>
-          )}
+          <div className="mt-6 flex justify-center">
+            <SearchBar />
+          </div>
         </div>
         
         <div className="lg:w-1/3">

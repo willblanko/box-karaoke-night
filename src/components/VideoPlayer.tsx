@@ -1,8 +1,9 @@
-
 import React, { useRef, useEffect } from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
 import { formatTimeDisplay } from "@/lib/karaoke-utils";
 import { Capacitor } from '@capacitor/core';
+import { Button } from "./ui/button";
+import { Pause, Play, RotateCcw } from "lucide-react";
 
 export const VideoPlayer: React.FC = () => {
   const { currentSong, playerState, setPlayerState } = useKaraoke();
@@ -26,7 +27,6 @@ export const VideoPlayer: React.FC = () => {
     const handleEnded = () => {
       if (!skipTriggeredRef.current) {
         setPlayerState("ended");
-        // Sair do modo de tela cheia quando o vídeo terminar
         if (document.fullscreenElement) {
           document.exitFullscreen().catch(console.error);
         }
@@ -44,7 +44,6 @@ export const VideoPlayer: React.FC = () => {
     };
   }, [setPlayerState]);
 
-  // Resetar o flag de skip quando o playerState muda
   useEffect(() => {
     if (playerState === 'playing') {
       skipTriggeredRef.current = false;
@@ -58,22 +57,16 @@ export const VideoPlayer: React.FC = () => {
     if (currentSong) {
       console.log("Carregando vídeo:", currentSong.title, currentSong.videoPath);
       
-      // Use o caminho real do arquivo de vídeo da música
       let videoPath = currentSong.videoPath;
       
       if (Capacitor.isNativePlatform()) {
-        // Em ambiente nativo (TV Box Android), use o caminho completo
         console.log("Usando caminho nativo:", videoPath);
       } else {
-        // Em ambiente de teste web, use um vídeo de amostra com o ID da música
         console.log("AMBIENTE WEB: Usando vídeo de amostra para simulação");
         videoPath = `/sample-videos/${currentSong.id}.mp4`;
         
-        // Se não encontrar o vídeo específico, tente usar um vídeo genérico local
-        // Isso é apenas para testes no navegador
         const fallbackVideo = "/sample-videos/sample-karaoke.mp4";
         
-        // Verificar se o vídeo específico existe
         fetch(videoPath)
           .then(response => {
             if (!response.ok) {
@@ -89,7 +82,6 @@ export const VideoPlayer: React.FC = () => {
           });
       }
       
-      // Define o src com o caminho do vídeo
       videoElement.src = videoPath;
       videoElement.load();
       
@@ -98,7 +90,6 @@ export const VideoPlayer: React.FC = () => {
         videoElement.play()
           .then(() => {
             console.log("Vídeo reproduzindo com sucesso!");
-            // Em um aplicativo de TV real, você pode querer ativar tela cheia
             if (Capacitor.isNativePlatform()) {
               videoElement.requestFullscreen()
                 .catch(err => console.error("Erro ao entrar em tela cheia:", err));
@@ -113,6 +104,28 @@ export const VideoPlayer: React.FC = () => {
       videoElement.src = "";
     }
   }, [currentSong, playerState, setPlayerState]);
+
+  const handlePlayPause = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+      setPlayerState('playing');
+    } else {
+      video.pause();
+      setPlayerState('paused');
+    }
+  };
+
+  const handleRestart = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    video.currentTime = 0;
+    video.play();
+    setPlayerState('playing');
+  };
 
   if (!currentSong) {
     return (
@@ -131,20 +144,41 @@ export const VideoPlayer: React.FC = () => {
           controls={false}
         />
         
-        {/* Overlay com informações da música */}
         <div className="absolute top-0 left-0 w-full bg-gradient-to-b from-black/80 to-transparent p-4">
           <h2 className="text-tv-xl font-bold text-white">{currentSong.title}</h2>
           <p className="text-tv-base text-white/90">{currentSong.artist}</p>
         </div>
         
-        {/* Barra de progresso e tempo */}
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-white hover:bg-white/20"
+                onClick={handlePlayPause}
+              >
+                {playerState === 'playing' ? <Pause size={24} /> : <Play size={24} />}
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-white hover:bg-white/20"
+                onClick={handleRestart}
+              >
+                <RotateCcw size={24} />
+              </Button>
+            </div>
+            
+            <p className="text-tv-sm text-white/80">
+              Música #{currentSong.id}
+            </p>
+          </div>
+          
           <div className="flex justify-between items-center mb-1">
             <p className="text-tv-sm text-white/90">
               {formatTimeDisplay(currentTime, duration)}
-            </p>
-            <p className="text-tv-sm text-white/80">
-              Música #{currentSong.id}
             </p>
           </div>
           
