@@ -1,8 +1,9 @@
 
-import { Filesystem, Directory } from '@capacitor/filesystem'; // Ensure consistent imports here too
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { Capacitor } from '@capacitor/core';
 import { getKaraokeFolderPath } from './tv-box-utils';
+import { toast } from '@/components/ui/use-toast';
 
 // Função para ler o arquivo musicas.txt e extrair os metadados
 async function parseSongMetadata(content: string): Promise<Song[]> {
@@ -25,8 +26,8 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
         id,
         title,
         artist,
-        duration: 0, // Será preenchido quando o vídeo for carregado
-        videoPath: `${getKaraokeFolderPath()}/${videoPath}` // Usa o caminho configurado
+        duration: 0,
+        videoPath: `${getKaraokeFolderPath()}/${videoPath}`
       });
     }
   }
@@ -34,70 +35,18 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
   return songs;
 }
 
-// Função auxiliar para obter o conteúdo de musicas.txt embarcado no app
-function getEmbeddedMusicas(): string {
-  // Conteúdo do musicas.txt embarcado na aplicação para garantir funcionamento
-  return `
-[1001]
-Arquivo= 1001.mp4
-Artista= paralamas do sucesso
-Musica= a lhe esperar
-***
-[1002]
-Arquivo= 1002.mp4
-Artista= avioes do forro
-Musica= agora chora e com banda calypso
-***
-[1003]
-Arquivo= 1003.mp4
-Artista= Raça Negra
-Musica= Cheia de Manias
-***
-[1004]
-Arquivo= 1004.mp4
-Artista= Zezé Di Camargo & Luciano
-Musica= É o Amor
-***
-[1005]
-Arquivo= 1005.mp4
-Artista= Djavan
-Musica= Sina
-***
-[1123]
-Arquivo= 1123.mp4
-Artista= João Mineiro e Marciano
-Musica= Ainda Ontem Chorei de Saudade
-***
-[1200]
-Arquivo= 1200.mp4
-Artista= Alceu Valença
-Musica= Anunciação
-***`;
-}
-
-// Função para carregar o arquivo musicas.txt de diferentes locais
+// Função para carregar o arquivo musicas.txt
 async function loadSongCatalogFile(): Promise<string> {
   console.log("Tentando carregar catálogo de músicas...");
 
   try {
-    if (!Capacitor.isNativePlatform()) {
-      // Em desenvolvimento web, retornar dados simulados
-      return getEmbeddedMusicas();
-    }
-
-    const karaokeFolder = getKaraokeFolderPath();
-    console.log(`Buscando musicas.txt em: ${karaokeFolder}`);
-
-    // Tentar múltiplos locais para o arquivo musicas.txt, começando pela pasta configurada
+    // Lista de possíveis locais do arquivo musicas.txt, em ordem de prioridade
     const possibleLocations = [
-      { directory: Directory.ExternalStorage, path: `${karaokeFolder}/musicas.txt` },
-      { directory: Directory.ExternalStorage, path: 'musicas.txt' },
-      { directory: Directory.ExternalStorage, path: 'karaoke/musicas.txt' },
-      { directory: Directory.Documents, path: 'musicas.txt' },
-      { directory: Directory.Data, path: 'musicas.txt' },
-      { directory: Directory.Cache, path: 'musicas.txt' },
-      // Adicionar pasta assets do app como uma última opção
+      { directory: Directory.ExternalStorage, path: 'assets/musicas.txt' },
+      { directory: Directory.ExternalStorage, path: 'assets/flutter_assets/assets/musicas.txt' },
       { directory: Directory.Data, path: 'assets/musicas.txt' },
+      { directory: Directory.Documents, path: 'assets/musicas.txt' },
+      { directory: Directory.ExternalStorage, path: `${getKaraokeFolderPath()}/musicas.txt` },
     ];
 
     for (const location of possibleLocations) {
@@ -108,55 +57,58 @@ async function loadSongCatalogFile(): Promise<string> {
           directory: location.directory
         });
 
-        // Converter o resultado para string
-        if (typeof result.data === 'string') {
-          console.log(`Arquivo encontrado em: ${location.path}`);
-          return result.data;
-        } else {
-          // Se for um Blob, converter para texto
-          const text = await new Blob([result.data as any]).text();
-          console.log(`Arquivo encontrado em: ${location.path}`);
-          return text;
-        }
+        const content = typeof result.data === 'string' 
+          ? result.data 
+          : await new Blob([result.data as any]).text();
+
+        console.log(`Arquivo musicas.txt encontrado em: ${location.path}`);
+        return content;
       } catch (error) {
-        // Continuar tentando outros locais se não encontrar
-        console.log(`Não encontrado em: ${location.path}`);
+        console.log(`Não encontrado em: ${location.path}, tentando próximo local...`);
       }
     }
 
-    console.log("Usando catálogo de músicas incorporado no aplicativo.");
-    // Se não encontrou o arquivo em nenhum lugar, use o catálogo embutido
-    return getEmbeddedMusicas();
+    throw new Error('Arquivo musicas.txt não encontrado em nenhum local');
   } catch (error) {
     console.error("Erro ao ler o catálogo de músicas:", error);
-    // Em caso de erro, retornar o catálogo embutido
-    return getEmbeddedMusicas();
+    throw error;
   }
 }
 
-// Função para escanear músicas usando o catálogo interno
+// Função para escanear músicas
 export async function scanUSBForSongs(): Promise<Song[]> {
   console.log("Carregando catálogo de músicas...");
   
   try {
     const content = await loadSongCatalogFile();
     const songs = await parseSongMetadata(content);
-    console.log(`Encontradas ${songs.length} músicas no catálogo`);
+    
+    if (songs.length === 0) {
+      toast({
+        title: "Aviso",
+        description: "Nenhuma música encontrada no catálogo.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Sucesso",
+        description: `${songs.length} músicas carregadas do catálogo.`
+      });
+    }
+    
     return songs;
   } catch (error) {
     console.error("Erro ao escanear músicas:", error);
+    toast({
+      title: "Erro",
+      description: "Falha ao carregar o arquivo musicas.txt. Verifique se o arquivo existe no local correto.",
+      variant: "destructive"
+    });
     throw error;
   }
 }
 
-// Função para obter o caminho do vídeo no USB
+// Função para obter o caminho do vídeo
 export function getVideoPath(songId: number): string {
-  const karaokeFolderPath = getKaraokeFolderPath();
-  
-  if (!Capacitor.isNativePlatform()) {
-    return `${karaokeFolderPath}/${songId}.mp4`;
-  }
-  
-  // Em produção, retornar o caminho real do arquivo no USB
-  return `${karaokeFolderPath}/${songId}.mp4`;
+  return `${getKaraokeFolderPath()}/${songId}.mp4`;
 }

@@ -1,4 +1,3 @@
-
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
@@ -160,11 +159,10 @@ export function getKaraokeFolderPath(): string {
   // Tenta obter do localStorage
   const savedPath = localStorage.getItem('karaokeFolderPath');
   
-  // Se encontrou um caminho salvo, use-o
   if (savedPath) {
     return savedPath;
   }
   
-  // Caso contrário, retorna um caminho padrão
-  return Capacitor.isNativePlatform() ? '/storage/emulated/0' : '/storage/usb/karaoke';
+  // Caminho padrão para a pasta de karaoke
+  return '/storage/emulated/0/karaoke';
 }
