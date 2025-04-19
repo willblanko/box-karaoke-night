@@ -1,3 +1,4 @@
+
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { getKaraokeFolderPath } from './tv-box-utils';
@@ -46,7 +47,7 @@ async function loadSongCatalogFile(): Promise<string> {
       // No Android, carrega do diretório assets do APK
       const result = await Filesystem.readFile({
         path: 'public/musicas.txt',
-        directory: Directory.Application  // Alterado para Directory.Application
+        directory: Directory.Data  // Alterado para Directory.Data que é válido
       });
 
       const content = typeof result.data === 'string' 
