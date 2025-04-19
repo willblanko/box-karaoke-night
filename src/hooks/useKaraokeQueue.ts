@@ -35,6 +35,7 @@ export const useKaraokeQueue = () => {
 
   return {
     queue,
+    setQueue,
     currentSong,
     setCurrentSong,
     addToQueue,

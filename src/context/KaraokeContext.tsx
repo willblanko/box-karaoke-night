@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { KaraokeContextData } from "./types";
 import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
@@ -19,7 +20,8 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     addToQueue,
     removeFromQueue,
     playNext: playNextFromQueue,
-    setCurrentSong
+    setCurrentSong,
+    setQueue
   } = useKaraokeQueue();
 
   const {
@@ -35,18 +37,13 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     karaokeFolderPath
   } = useKaraokeSongs();
 
-  const {
-    playerState,
-    setPlayerState,
-    performance
-  } = useKaraokePerformance(playNext);
-
+  const [previousSongs, setPreviousSongs] = React.useState<Song[]>([]);
+  
   // Make sure any useRef hooks are called before useEffect
   const effectRan = useRef(false);
   const skipInProgress = useRef(false);
 
-  const [previousSongs, setPreviousSongs] = React.useState<Song[]>([]);
-
+  // Define playNext function before using it in useKaraokePerformance
   const playNext = () => {
     if (currentSong) {
       setPreviousSongs(prev => [...prev, currentSong]);
@@ -63,6 +60,12 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     }
   };
 
+  const {
+    playerState,
+    setPlayerState,
+    performance
+  } = useKaraokePerformance(playNext);
+  
   const playPrevious = () => {
     if (previousSongs.length > 0) {
       const lastSong = previousSongs[previousSongs.length - 1];
