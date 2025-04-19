@@ -1,4 +1,3 @@
-
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { getKaraokeFolderPath } from './tv-box-utils';
@@ -25,16 +24,21 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
     
     if (idMatch && fileMatch && artistMatch && titleMatch) {
       const id = parseInt(idMatch[1]);
-      const videoPath = fileMatch[1].trim();
+      const fileName = fileMatch[1].trim();
       const artist = artistMatch[1].trim();
       const title = titleMatch[1].trim();
+      
+      // Usa o ID da música para o nome do arquivo .mp4
+      const videoFileName = `${id}.mp4`;
+      const karaokeFolderPath = getKaraokeFolderPath();
       
       songs.push({
         id,
         title,
         artist,
         duration: 0,
-        videoPath: `${getKaraokeFolderPath()}/${videoPath}`
+        // O caminho do vídeo agora é construído corretamente com o ID da música
+        videoPath: `${karaokeFolderPath}/${videoFileName}`
       });
     }
   }
@@ -164,5 +168,6 @@ export async function scanUSBForSongs(): Promise<Song[]> {
 
 // Função para obter o caminho do vídeo
 export function getVideoPath(songId: number): string {
+  // Construir o caminho correto para o arquivo de vídeo com base no ID da música
   return `${getKaraokeFolderPath()}/${songId}.mp4`;
 }

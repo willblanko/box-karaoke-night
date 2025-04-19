@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
 import { formatTimeDisplay } from "@/lib/karaoke-utils";
+import { Capacitor } from '@capacitor/core';
 
 export const VideoPlayer: React.FC = () => {
   const { currentSong, playerState, setPlayerState } = useKaraoke();
@@ -47,13 +48,39 @@ export const VideoPlayer: React.FC = () => {
     if (currentSong) {
       console.log("Carregando vídeo:", currentSong.title, currentSong.videoPath);
       
-      // Em um ambiente de desenvolvimento/teste, use um vídeo de exemplo
-      // Em produção, usaríamos o caminho real do vídeo
-      const videoPath = currentSong.videoPath || "https://example.com/sample-video.mp4";
+      // Use o caminho real do arquivo de vídeo da música
+      let videoPath = currentSong.videoPath;
       
-      // Substituir com um vídeo real para testes
-      const testVideo = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-      videoElement.src = testVideo;
+      if (Capacitor.isNativePlatform()) {
+        // Em ambiente nativo (TV Box Android), use o caminho completo
+        console.log("Usando caminho nativo:", videoPath);
+      } else {
+        // Em ambiente de teste web, use um vídeo de amostra com o ID da música
+        console.log("AMBIENTE WEB: Usando vídeo de amostra para simulação");
+        videoPath = `/sample-videos/${currentSong.id}.mp4`;
+        
+        // Se não encontrar o vídeo específico, tente usar um vídeo genérico local
+        // Isso é apenas para testes no navegador
+        const fallbackVideo = "/sample-videos/sample-karaoke.mp4";
+        
+        // Verificar se o vídeo específico existe
+        fetch(videoPath)
+          .then(response => {
+            if (!response.ok) {
+              console.log(`Vídeo específico não encontrado, usando fallback: ${fallbackVideo}`);
+              videoElement.src = fallbackVideo;
+              videoElement.load();
+            }
+          })
+          .catch(() => {
+            console.log(`Erro ao verificar vídeo, usando fallback: ${fallbackVideo}`);
+            videoElement.src = fallbackVideo;
+            videoElement.load();
+          });
+      }
+      
+      // Define o src com o caminho do vídeo
+      videoElement.src = videoPath;
       videoElement.load();
       
       if (playerState === "playing") {
@@ -62,8 +89,10 @@ export const VideoPlayer: React.FC = () => {
           .then(() => {
             console.log("Vídeo reproduzindo com sucesso!");
             // Em um aplicativo de TV real, você pode querer ativar tela cheia
-            videoElement.requestFullscreen()
-              .catch(err => console.error("Erro ao entrar em tela cheia:", err));
+            if (Capacitor.isNativePlatform()) {
+              videoElement.requestFullscreen()
+                .catch(err => console.error("Erro ao entrar em tela cheia:", err));
+            }
           })
           .catch(err => {
             console.error("Erro ao reproduzir vídeo:", err);
