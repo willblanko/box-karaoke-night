@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.45a37de93bab46e5863830a7532e3cec',
+  appId: 'app.lovable._45a37de93bab46e5863830a7532e3cec',
   appName: 'box-karaoke-night',
   webDir: 'dist',
   server: {

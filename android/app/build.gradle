@@ -1,10 +1,11 @@
+
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.lovableapp.karaokenight"
+    namespace "app.lovable._45a37de93bab46e5863830a7532e3cec"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.lovableapp.karaokenight"
+        applicationId "app.lovable._45a37de93bab46e5863830a7532e3cec"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
