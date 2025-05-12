@@ -18,7 +18,7 @@ const KaraokeContent: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-background flex flex-col p-6 lg:p-8 gap-6">
-      <header className="text-center mb-4">
+      <header className="text-center mb-4 relative">
         <h1 className="text-tv-4xl font-bold text-primary mb-2 tracking-tight">
           Karaoke Box
         </h1>

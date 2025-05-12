@@ -25,6 +25,7 @@ export interface KaraokeContextData {
   setPlayerState: (state: PlayerState) => void;
   confirmAndPlaySong: () => void;
   cancelPendingSong: () => void;
+  addPendingSongToQueue: () => void; // Added new function
   loadSongsFromUSB: () => Promise<void>;
   setWasSkipped: (value: boolean) => void;
 }

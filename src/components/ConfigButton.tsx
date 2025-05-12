@@ -8,12 +8,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Folder, ChevronRight, ChevronLeft, HardDrive, Settings } from "lucide-react";
+import { Folder, ChevronRight, ChevronLeft, HardDrive, Settings, Usb, Home } from "lucide-react";
 import { listStorageDirectories } from "@/lib/tv-box-utils";
 import { ScrollArea } from "./ui/scroll-area";
-import { toast } from "sonner";
 import { useToast } from "./ui/use-toast";
 import { Capacitor } from "@capacitor/core";
+import { useKaraoke } from "@/context/KaraokeContext";
 
 interface DirectoryItem {
   name: string;
@@ -27,6 +27,7 @@ export const ConfigButton = () => {
   const [pathHistory, setPathHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { isUSBConnected, loadSongsFromUSB } = useKaraoke();
 
   const loadDirectories = async (path: string) => {
     try {
@@ -41,26 +42,19 @@ export const ConfigButton = () => {
       console.error("Erro ao listar diretórios:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível acessar esta pasta",
+        description: "Não foi possível acessar esta pasta. Verifique as permissões.",
         variant: "destructive"
       });
       
       // Em caso de erro, volte a um caminho mais seguro
       if (pathHistory.length > 0) {
         navigateBack();
-      } else if (Capacitor.isNativePlatform()) {
-        // Em ambiente Android, tente carregar caminhos comuns
-        setDirectories([
-          { name: "storage", path: "/storage", isDirectory: true },
-          { name: "sdcard", path: "/sdcard", isDirectory: true },
-          { name: "mnt", path: "/mnt", isDirectory: true },
-          { name: "data", path: "/data", isDirectory: true }
-        ]);
       } else {
-        // Em ambiente web, carregue opções simuladas
         setDirectories([
+          { name: "Dispositivos USB", path: "/__usb_devices__", isDirectory: true },
+          { name: "Armazenamento Interno", path: "/storage/emulated/0", isDirectory: true },
           { name: "storage", path: "/storage", isDirectory: true },
-          { name: "sdcard", path: "/sdcard", isDirectory: true },
+          { name: "sdcard", path: "/sdcard", isDirectory: true }
         ]);
       }
     } finally {
@@ -68,12 +62,27 @@ export const ConfigButton = () => {
     }
   };
 
+  // Inicializar os diretórios ao montar o componente
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Em ambiente Android, iniciar em caminhos mais prováveis para TV Box
-      setCurrentPath('/storage');
+      // Em ambiente Android, mostrar opções reais de armazenamento
+      if (isUSBConnected) {
+        setCurrentPath('/__usb_devices__');
+      } else {
+        setCurrentPath('/storage/emulated/0');  // Comece com o armazenamento principal no Android
+      }
+    } else {
+      // Em ambiente web, mostrar um aviso
+      toast({
+        title: "Ambiente Web",
+        description: "Acesso real ao sistema de arquivos não disponível em ambiente web",
+      });
+      setCurrentPath('/');
     }
-    
+  }, [isUSBConnected]); 
+
+  // Carregar diretórios sempre que o caminho atual mudar
+  useEffect(() => {
     loadDirectories(currentPath);
   }, [currentPath]);
 
@@ -90,7 +99,23 @@ export const ConfigButton = () => {
     }
   };
 
-  const selectKaraokeFolder = (path: string) => {
+  const navigateHome = () => {
+    setPathHistory([]);
+    
+    // Em ambiente Android, navegue para o armazenamento interno
+    if (Capacitor.isNativePlatform()) {
+      setCurrentPath('/storage/emulated/0');
+    } else {
+      setCurrentPath('/');
+    }
+  };
+
+  const navigateToUsb = () => {
+    setPathHistory([]);
+    setCurrentPath('/__usb_devices__');
+  };
+
+  const selectKaraokeFolder = async (path: string) => {
     localStorage.setItem('karaokeFolderPath', path);
     console.log(`Pasta de karaoke configurada: ${path}`);
     
@@ -98,6 +123,22 @@ export const ConfigButton = () => {
       title: "Pasta configurada",
       description: `Pasta de Karaoke definida para: ${path}`
     });
+    
+    // Recarregar as músicas depois de alterar a pasta
+    try {
+      await loadSongsFromUSB();
+      toast({
+        title: "Sucesso",
+        description: "Músicas recarregadas da nova pasta"
+      });
+    } catch (error) {
+      console.error("Erro ao recarregar músicas:", error);
+      toast({
+        title: "Aviso",
+        description: "Não foi possível carregar músicas da pasta selecionada",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -118,15 +159,38 @@ export const ConfigButton = () => {
         
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-4">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={navigateBack}
-              disabled={pathHistory.length === 0}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm truncate">{currentPath}</span>
+            <div className="flex space-x-1">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={navigateBack}
+                disabled={pathHistory.length === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={navigateHome}
+              >
+                <Home className="h-4 w-4" />
+              </Button>
+              
+              {isUSBConnected && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={navigateToUsb}
+                >
+                  <Usb className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            
+            <div className="ml-2 text-sm truncate bg-muted/50 px-2 py-1 rounded flex-1">
+              {currentPath}
+            </div>
           </div>
 
           <ScrollArea className="h-[400px] rounded-md border p-4">
@@ -136,13 +200,16 @@ export const ConfigButton = () => {
               </div>
             ) : directories.length > 0 ? (
               directories.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex items-center gap-2 mb-1">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start gap-2 mb-1 overflow-hidden"
+                    className="w-full justify-start gap-2 overflow-hidden"
                     onClick={() => item.isDirectory && navigateToDirectory(item.path)}
+                    disabled={!item.isDirectory}
                   >
-                    {item.isDirectory ? (
+                    {item.path === '/__usb_devices__' ? (
+                      <Usb className="h-4 w-4 flex-shrink-0" />
+                    ) : item.isDirectory ? (
                       <Folder className="h-4 w-4 flex-shrink-0" />
                     ) : (
                       <HardDrive className="h-4 w-4 flex-shrink-0" />

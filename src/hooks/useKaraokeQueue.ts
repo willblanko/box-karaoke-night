@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Song } from '@/lib/types';
 
@@ -7,14 +6,15 @@ export const useKaraokeQueue = () => {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
 
   const addToQueue = (song: Song) => {
-    setQueue(prev => [...prev, song]);
-    
+    // If no song is currently playing, set it as current song and start playing
     if (!currentSong) {
       setCurrentSong(song);
-      setQueue(prev => prev.filter((_, i) => i !== 0));
       return true; // Indicates song started playing
+    } else {
+      // Otherwise add to queue
+      setQueue(prev => [...prev, song]);
+      return false; // Indicates song was only added to queue
     }
-    return false; // Indicates song was only added to queue
   };
 
   const removeFromQueue = (index: number) => {

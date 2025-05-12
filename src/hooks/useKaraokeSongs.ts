@@ -23,8 +23,20 @@ export const useKaraokeSongs = () => {
     
     try {
       setIsLoading(true);
+      // Atualizar o caminho da pasta antes de carregar
+      const updatedPath = getKaraokeFolderPath();
+      setKaraokeFolderPath(updatedPath);
+      
+      console.log(`Carregando músicas da pasta: ${updatedPath}`);
       const songs = await scanUSBForSongs();
-      setAvailableSongs(songs);
+      
+      // Atualiza os caminhos dos vídeos em cada música para o caminho atual
+      const updatedSongs = songs.map(song => ({
+        ...song,
+        videoPath: `${updatedPath}/${song.id}.mp4`
+      }));
+      
+      setAvailableSongs(updatedSongs);
       
       if (songs.length === 0 && !initialLoadDone.current) {
         toast({
@@ -54,18 +66,19 @@ export const useKaraokeSongs = () => {
     }
   };
 
-  // Monitorar alterações na pasta de karaoke com menos frequência
+  // Monitorar alterações na pasta de karaoke
   useEffect(() => {
     const checkFolderChanges = () => {
       const currentPath = getKaraokeFolderPath();
       if (currentPath !== karaokeFolderPath) {
+        console.log(`Pasta de karaoke alterada: ${currentPath}`);
         setKaraokeFolderPath(currentPath);
         loadSongsFromUSB();
       }
     };
     
-    // Verificar mudanças a cada 10 segundos ao invés de 2
-    const interval = setInterval(checkFolderChanges, 10000);
+    // Verificar mudanças a cada 5 segundos
+    const interval = setInterval(checkFolderChanges, 5000);
     
     return () => clearInterval(interval);
   }, [karaokeFolderPath]);
@@ -76,14 +89,24 @@ export const useKaraokeSongs = () => {
       loadSongsFromUSB();
     }
     
-    // Add USB connection listener with less aggressive notifications
+    // Add USB connection listener
     const unsubscribe = listenForUSBConnection((connected) => {
       const wasConnected = isUSBConnected;
       setIsUSBConnected(connected);
       
       // Only reload songs if connection state changed from disconnected to connected
       if (connected && !wasConnected) {
+        console.log("USB conectado, recarregando músicas");
+        toast({
+          title: "USB Conectado",
+          description: "Dispositivo de armazenamento detectado"
+        });
         loadSongsFromUSB();
+      } else if (!connected && wasConnected) {
+        toast({
+          title: "USB Desconectado",
+          description: "Dispositivo de armazenamento removido"
+        });
       }
     });
 
@@ -109,8 +132,15 @@ export const useKaraokeSongs = () => {
       const song = availableSongs.find(s => s.id === songId);
       if (song) {
         console.log(`Música encontrada: "${song.title}" por ${song.artist}`);
-        setPendingSong(song);
-        return song;
+        
+        // Atualiza o caminho do vídeo para usar a pasta atual
+        const songWithUpdatedPath = {
+          ...song,
+          videoPath: `${karaokeFolderPath}/${song.id}.mp4`
+        };
+        
+        setPendingSong(songWithUpdatedPath);
+        return songWithUpdatedPath;
       } else {
         console.log(`Música #${songId} não encontrada no catálogo`);
         toast({
