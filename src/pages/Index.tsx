@@ -1,8 +1,13 @@
 
 import { KaraokeApp } from "@/components/KaraokeApp";
+import { KaraokeProvider } from "@/context/KaraokeContext";
 
 const Index = () => {
-  return <KaraokeApp />;
+  return (
+    <KaraokeProvider>
+      <KaraokeApp />
+    </KaraokeProvider>
+  );
 };
 
 export default Index;
