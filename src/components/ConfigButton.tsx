@@ -9,7 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Folder, ChevronRight, ChevronLeft, HardDrive, Settings, Usb, Home } from "lucide-react";
-import { listStorageDirectories, checkUSBConnection } from "@/lib/tv-box-utils";
+import { listStorageDirectories } from "@/lib/tv-box-utils";
 import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "./ui/use-toast";
 import { Capacitor } from "@capacitor/core";
@@ -42,7 +42,7 @@ export const ConfigButton = () => {
       console.error("Erro ao listar diretórios:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível acessar esta pasta",
+        description: "Não foi possível acessar esta pasta. Verifique as permissões.",
         variant: "destructive"
       });
       
@@ -50,12 +50,11 @@ export const ConfigButton = () => {
       if (pathHistory.length > 0) {
         navigateBack();
       } else {
-        // Lista de diretórios comuns que devem existir na maioria dos dispositivos Android
         setDirectories([
           { name: "Dispositivos USB", path: "/__usb_devices__", isDirectory: true },
+          { name: "Armazenamento Interno", path: "/storage/emulated/0", isDirectory: true },
           { name: "storage", path: "/storage", isDirectory: true },
-          { name: "sdcard", path: "/sdcard", isDirectory: true },
-          { name: "mnt", path: "/mnt", isDirectory: true }
+          { name: "sdcard", path: "/sdcard", isDirectory: true }
         ]);
       }
     } finally {
@@ -66,14 +65,18 @@ export const ConfigButton = () => {
   // Inicializar os diretórios ao montar o componente
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Detectar se estamos em ambiente Android e iniciar em caminhos reais
+      // Em ambiente Android, mostrar opções reais de armazenamento
       if (isUSBConnected) {
         setCurrentPath('/__usb_devices__');
       } else {
-        setCurrentPath('/storage');  // Comece com /storage em vez de / para Android
+        setCurrentPath('/storage/emulated/0');  // Comece com o armazenamento principal no Android
       }
     } else {
-      // Em ambiente web, use caminhos simulados
+      // Em ambiente web, mostrar um aviso
+      toast({
+        title: "Ambiente Web",
+        description: "Acesso real ao sistema de arquivos não disponível em ambiente web",
+      });
       setCurrentPath('/');
     }
   }, [isUSBConnected]); 
@@ -99,9 +102,9 @@ export const ConfigButton = () => {
   const navigateHome = () => {
     setPathHistory([]);
     
-    // Em ambiente Android, navegue para /storage em vez de /
+    // Em ambiente Android, navegue para o armazenamento interno
     if (Capacitor.isNativePlatform()) {
-      setCurrentPath('/storage');
+      setCurrentPath('/storage/emulated/0');
     } else {
       setCurrentPath('/');
     }

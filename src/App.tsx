@@ -10,12 +10,45 @@ import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Capacitor } from "@capacitor/core";
+import { Filesystem } from '@capacitor/filesystem';
 
 const queryClient = new QueryClient();
 
 // App com ajustes para TV Box Android (720p e 1080p)
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Solicitar permissões no Android
+  const requestPermissions = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        console.log("Solicitando permissões de armazenamento...");
+        
+        // Esta operação tentará ler um arquivo na raiz do sistema de arquivos
+        // o que automaticamente solicitará as permissões necessárias
+        await Filesystem.readdir({ path: '/' });
+        
+        console.log("Verificando acesso ao armazenamento externo...");
+        try {
+          await Filesystem.readdir({ path: '/storage' });
+          console.log("Acesso ao /storage concedido");
+        } catch (e) {
+          console.log("Não foi possível acessar /storage", e);
+        }
+        
+        console.log("Verificando acesso ao armazenamento interno...");
+        try {
+          await Filesystem.readdir({ path: '/storage/emulated/0' });
+          console.log("Acesso ao armazenamento interno concedido");
+        } catch (e) {
+          console.log("Não foi possível acessar o armazenamento interno", e);
+        }
+        
+      } catch (err) {
+        console.error("Erro ao solicitar permissões:", err);
+      }
+    }
+  };
   
   // Detectar e ajustar na montagem + no resize
   useEffect(() => {
@@ -31,6 +64,8 @@ const App = () => {
     // Ocultar cursor apenas em TV Box (não em desenvolvimento)
     if (Capacitor.isNativePlatform()) {
       document.body.style.cursor = 'none'; // Ocultar cursor do mouse em TVs
+      // Solicitar permissões ao iniciar em dispositivos Android
+      requestPermissions();
     }
     
     // Simular carregamento inicial

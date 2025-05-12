@@ -1,5 +1,5 @@
 
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { getKaraokeFolderPath } from './tv-box-utils';
 import { Capacitor } from '@capacitor/core';
@@ -87,45 +87,36 @@ async function loadSongCatalogFile(): Promise<string> {
       }
       
       // No Android, tenta carregar de várias fontes possíveis
-      const possibleDirectories = [
-        Directory.Data, 
-        Directory.Documents,
-        Directory.Cache, 
-        Directory.ExternalStorage
-      ];
-      
       const possiblePaths = [
-        'musicas.txt',
-        'Download/musicas.txt',
-        'public/musicas.txt',
-        'assets/musicas.txt',
-        'assets/public/musicas.txt',
-        `${karaokeFolderPath}/musicas.txt`
+        `${karaokeFolderPath}/musicas.txt`,
+        '/storage/emulated/0/Download/musicas.txt',
+        '/sdcard/Download/musicas.txt', 
+        '/storage/self/primary/Download/musicas.txt',
+        '/storage/emulated/0/karaoke/musicas.txt',
+        '/sdcard/karaoke/musicas.txt',
+        '/storage/self/primary/karaoke/musicas.txt'
       ];
       
-      // Tenta todas as combinações possíveis
-      for (const directory of possibleDirectories) {
-        for (const path of possiblePaths) {
-          try {
-            console.log(`Tentando carregar de ${directory}/${path}`);
-            const result = await Filesystem.readFile({
-              path: path,
-              directory: directory
-            });
+      // Tenta todos os caminhos possíveis
+      for (const path of possiblePaths) {
+        try {
+          console.log(`Tentando carregar de ${path}`);
+          const result = await Filesystem.readFile({
+            path: path
+          });
 
-            const content = typeof result.data === 'string' 
-              ? result.data 
-              : new TextDecoder().decode(result.data as any);
+          const content = typeof result.data === 'string' 
+            ? result.data 
+            : new TextDecoder().decode(result.data as any);
 
-            if (content && content.includes('***') && content.includes('[')) {
-              console.log(`Arquivo musicas.txt carregado com sucesso de ${directory}/${path}`);
-              return content;
-            } else {
-              console.log(`Arquivo encontrado em ${directory}/${path}, mas formato inválido`);
-            }
-          } catch (e) {
-            console.log(`Não foi possível carregar de ${directory}/${path}`);
+          if (content && content.includes('***') && content.includes('[')) {
+            console.log(`Arquivo musicas.txt carregado com sucesso de ${path}`);
+            return content;
+          } else {
+            console.log(`Arquivo encontrado em ${path}, mas formato inválido`);
           }
+        } catch (e) {
+          console.log(`Não foi possível carregar de ${path}`);
         }
       }
       
