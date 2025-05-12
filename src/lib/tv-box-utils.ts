@@ -1,4 +1,3 @@
-
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
@@ -68,57 +67,76 @@ export async function checkUSBConnection(): Promise<boolean> {
           return true;
         }
       } catch (e) {
-        console.log(`Caminho não encontrado: ${path}`);
         // Continua para o próximo caminho
       }
     }
     
-    // Método dinâmico: verifica todos os diretórios em /storage e /mnt
-    const checkDirectoriesFor = async (basePath: string) => {
-      try {
-        console.log(`Listando diretórios em ${basePath}`);
-        const result = await Filesystem.readdir({
-          path: basePath,
-          directory: Directory.ExternalStorage
-        });
-
-        // Sinais de dispositivo USB (nomes comuns em Android)
-        const usbIndicators = ['usb', 'otg', 'usbdisk', 'udisk', 'external', 'sda', 'sd', 'removable'];
-        
-        console.log(`Dispositivos encontrados em ${basePath}:`, result.files.map(f => f.name).join(", "));
-        
-        // Procura por diretórios que indicam dispositivos USB
-        for (const file of result.files) {
-          const lowerName = file.name.toLowerCase();
-          if (file.type === 'directory' && usbIndicators.some(term => lowerName.includes(term))) {
-            const fullPath = `${basePath}/${file.name}`;
-            console.log(`Possível USB encontrado: ${fullPath}`);
+    // Método mais abrangente para detectar dispositivos USB
+    try {
+      // Verifica em /storage
+      const storageResult = await Filesystem.readdir({
+        path: '/storage',
+        directory: Directory.ExternalStorage
+      });
+      
+      console.log("Dispositivos em /storage:", storageResult.files.map(f => f.name).join(", "));
+      
+      // Identifica dispositivos que não são o armazenamento interno
+      for (const file of storageResult.files) {
+        if (file.type === 'directory' && !['self', 'emulated', 'primary'].includes(file.name.toLowerCase())) {
+          const usbPath = `/storage/${file.name}`;
+          
+          try {
+            // Verifica se o diretório é acessível
+            await Filesystem.readdir({
+              path: usbPath,
+              directory: Directory.ExternalStorage
+            });
             
-            // Tenta acessar esse diretório para confirmar
-            try {
-              await Filesystem.readdir({
-                path: fullPath,
-                directory: Directory.ExternalStorage
-              });
-              
-              console.log(`USB confirmado em ${fullPath}`);
-              localStorage.setItem('lastDetectedUsbPath', fullPath);
-              return true;
-            } catch (e) {
-              console.log(`Não foi possível acessar ${fullPath}`);
-            }
+            console.log(`USB detectado em ${usbPath}`);
+            localStorage.setItem('lastDetectedUsbPath', usbPath);
+            return true;
+          } catch (e) {
+            console.log(`Não foi possível acessar ${usbPath}`);
           }
         }
-      } catch (error) {
-        console.log(`Erro ao listar ${basePath}:`, error);
       }
-      return false;
-    };
+    } catch (error) {
+      console.log("Erro ao verificar dispositivos em /storage:", error);
+    }
     
-    // Verifica em diretórios comuns
-    if (await checkDirectoriesFor('/storage')) return true;
-    if (await checkDirectoriesFor('/mnt')) return true;
-    if (await checkDirectoriesFor('/')) return true;
+    // Verifica em /mnt
+    try {
+      const mntResult = await Filesystem.readdir({
+        path: '/mnt',
+        directory: Directory.ExternalStorage
+      });
+      
+      console.log("Dispositivos em /mnt:", mntResult.files.map(f => f.name).join(", "));
+      
+      // Procura por diretorios que podem ser dispositivos USB
+      for (const file of mntResult.files) {
+        if (file.type === 'directory' && 
+           ['usb', 'otg', 'usbdisk', 'udisk', 'sda', 'external'].some(term => file.name.toLowerCase().includes(term))) {
+          
+          const usbPath = `/mnt/${file.name}`;
+          try {
+            await Filesystem.readdir({
+              path: usbPath,
+              directory: Directory.ExternalStorage
+            });
+            
+            console.log(`USB detectado em ${usbPath}`);
+            localStorage.setItem('lastDetectedUsbPath', usbPath);
+            return true;
+          } catch (e) {
+            console.log(`Não foi possível acessar ${usbPath}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Erro ao verificar dispositivos em /mnt:", error);
+    }
     
     console.log("USB não detectado após todas as verificações");
     return false;
@@ -182,8 +200,10 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
       // Retorna diretórios simulados para desenvolvimento
       console.log("Ambiente web, retornando diretórios simulados");
       return [
-        { name: 'storage', path: '/storage', isDirectory: true },
-        { name: 'sdcard', path: '/sdcard', isDirectory: true }
+        { name: 'Dispositivos USB (simulado)', path: '/__usb_devices__', isDirectory: true },
+        { name: 'storage (simulado)', path: '/storage', isDirectory: true },
+        { name: 'sdcard (simulado)', path: '/sdcard', isDirectory: true },
+        { name: 'Downloads (simulado)', path: '/Downloads', isDirectory: true }
       ];
     }
 
@@ -201,7 +221,9 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
           directory: Directory.ExternalStorage
         });
         
-        // Filtra por possíveis dispositivos USB
+        console.log("Conteúdo de /storage:", storageItems.files.map(f => f.name).join(", "));
+        
+        // Filtra por possíveis dispositivos USB (exclui armazenamento interno)
         for (const item of storageItems.files) {
           if (item.type === 'directory' && 
               !['self', 'emulated', 'primary'].includes(item.name.toLowerCase())) {
@@ -223,6 +245,8 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
           directory: Directory.ExternalStorage
         });
         
+        console.log("Conteúdo de /mnt:", mntItems.files.map(f => f.name).join(", "));
+        
         for (const item of mntItems.files) {
           if (item.type === 'directory' && 
               ['usb', 'media_rw', 'sdcard', 'sda', 'otg'].some(term => item.name.toLowerCase().includes(term))) {
@@ -238,19 +262,21 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
       }
       
       console.log(`Encontrados ${usbDevices.length} dispositivos USB`);
-      return usbDevices.length > 0 ? usbDevices : [
-        { name: 'Nenhum dispositivo USB encontrado', path: '/', isDirectory: false }
-      ];
+      
+      if (usbDevices.length === 0) {
+        return [
+          { name: "Nenhum dispositivo USB encontrado", path: '/', isDirectory: false },
+          // Adicione alguns caminhos de fallback para navegação
+          { name: "Voltar para storage", path: '/storage', isDirectory: true },
+          { name: "Voltar para raiz", path: '/', isDirectory: true }
+        ];
+      }
+      
+      return usbDevices;
     }
     
+    // Listagem de diretórios normais
     try {
-      // Antes de listar, verificar se o caminho existe
-      await Filesystem.stat({
-        path: path,
-        directory: Directory.ExternalStorage
-      });
-      
-      // Lista o conteúdo do diretório
       const result = await Filesystem.readdir({
         path: path,
         directory: Directory.ExternalStorage
@@ -269,51 +295,39 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
         })
         .map(file => ({
           name: file.name,
-          path: `${path}${path.endsWith('/') ? '' : '/'}${file.name}`,
+          path: `${path === '/' ? '' : path}/${file.name}`,
           isDirectory: file.type === 'directory'
         }));
     } catch (error) {
       console.error(`Erro ao listar diretórios em ${path}:`, error);
       
-      // Se for o diretório raiz, tenta caminhos alternativos conhecidos
+      // Se for o diretório raiz, oferece caminhos comuns em Android
       if (path === '/' || path === '') {
-        console.log("Listando caminhos alternativos para raiz");
-        
-        const rootPaths = [
+        return [
           { name: 'Dispositivos USB', path: '/__usb_devices__', isDirectory: true },
           { name: 'storage', path: '/storage', isDirectory: true },
           { name: 'sdcard', path: '/sdcard', isDirectory: true },
           { name: 'mnt', path: '/mnt', isDirectory: true },
           { name: 'data', path: '/data', isDirectory: true }
         ];
-        
-        // Verifica quais caminhos existem
-        const validPaths = await Promise.all(
-          rootPaths.map(async (item) => {
-            if (item.path === '/__usb_devices__') return item; // Caminho especial, sempre mostrar
-            
-            try {
-              await Filesystem.stat({
-                path: item.path,
-                directory: Directory.ExternalStorage
-              });
-              console.log(`Caminho válido encontrado: ${item.path}`);
-              return item;
-            } catch {
-              return null;
-            }
-          })
-        );
-        
-        const filteredPaths = validPaths.filter(Boolean);
-        console.log(`Caminhos raiz válidos encontrados: ${filteredPaths.length}`);
-        return filteredPaths;
       }
       
-      return [];
+      // Para outros erros, retorne uma lista vazia com opções de navegação
+      return [
+        { name: "Pasta inacessível", path: path, isDirectory: false },
+        { name: "Voltar para storage", path: '/storage', isDirectory: true },
+        { name: "Voltar para raiz", path: '/', isDirectory: true }
+      ];
     }
   } catch (generalError) {
     console.error('Erro geral ao listar diretórios:', generalError);
-    return [];
+    
+    // Em caso de erro grave, ofereça caminhos comuns para Android
+    return [
+      { name: 'Dispositivos USB', path: '/__usb_devices__', isDirectory: true },
+      { name: 'storage', path: '/storage', isDirectory: true },
+      { name: 'sdcard', path: '/sdcard', isDirectory: true },
+      { name: 'mnt', path: '/mnt', isDirectory: true }
+    ];
   }
 }

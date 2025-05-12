@@ -50,6 +50,7 @@ export const ConfigButton = () => {
       if (pathHistory.length > 0) {
         navigateBack();
       } else {
+        // Lista de diretórios comuns que devem existir na maioria dos dispositivos Android
         setDirectories([
           { name: "Dispositivos USB", path: "/__usb_devices__", isDirectory: true },
           { name: "storage", path: "/storage", isDirectory: true },
@@ -62,17 +63,25 @@ export const ConfigButton = () => {
     }
   };
 
+  // Inicializar os diretórios ao montar o componente
   useEffect(() => {
-    // Iniciar mostrando a lista de dispositivos USB
-    if (isUSBConnected && Capacitor.isNativePlatform()) {
-      setCurrentPath('/__usb_devices__');
+    if (Capacitor.isNativePlatform()) {
+      // Detectar se estamos em ambiente Android e iniciar em caminhos reais
+      if (isUSBConnected) {
+        setCurrentPath('/__usb_devices__');
+      } else {
+        setCurrentPath('/storage');  // Comece com /storage em vez de / para Android
+      }
     } else {
-      // Em ambiente Android, iniciar em caminhos mais prováveis para TV Box
+      // Em ambiente web, use caminhos simulados
       setCurrentPath('/');
     }
-    
+  }, [isUSBConnected]); 
+
+  // Carregar diretórios sempre que o caminho atual mudar
+  useEffect(() => {
     loadDirectories(currentPath);
-  }, [currentPath, isUSBConnected]);
+  }, [currentPath]);
 
   const navigateToDirectory = (path: string) => {
     setPathHistory(prev => [...prev, currentPath]);
@@ -89,7 +98,13 @@ export const ConfigButton = () => {
 
   const navigateHome = () => {
     setPathHistory([]);
-    setCurrentPath('/');
+    
+    // Em ambiente Android, navegue para /storage em vez de /
+    if (Capacitor.isNativePlatform()) {
+      setCurrentPath('/storage');
+    } else {
+      setCurrentPath('/');
+    }
   };
 
   const navigateToUsb = () => {
@@ -115,6 +130,11 @@ export const ConfigButton = () => {
       });
     } catch (error) {
       console.error("Erro ao recarregar músicas:", error);
+      toast({
+        title: "Aviso",
+        description: "Não foi possível carregar músicas da pasta selecionada",
+        variant: "destructive"
+      });
     }
   };
 
