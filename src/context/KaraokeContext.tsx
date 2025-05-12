@@ -110,6 +110,18 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     }
   };
 
+  // New method to add song to queue without playing it immediately
+  const addPendingSongToQueue = () => {
+    if (pendingSong) {
+      // Use setQueue directly to avoid auto-playing if queue is empty
+      setQueue(prev => [...prev, pendingSong]);
+      console.log(`Música adicionada à fila: ${pendingSong.title}`);
+      
+      setPendingSong(null);
+      setSearchInput(''); // Limpa o input
+    }
+  };
+
   const cancelPendingSong = () => {
     console.log('Cancelando seleção de música');
     setPendingSong(null);
@@ -151,6 +163,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     setPlayerState,
     confirmAndPlaySong,
     cancelPendingSong,
+    addPendingSongToQueue, // Add the new method to the context value
     loadSongsFromUSB,
     setWasSkipped
   };

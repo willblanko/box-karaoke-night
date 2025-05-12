@@ -12,10 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Music, Play, X } from "lucide-react";
+import { Music, Play, X, ListPlus } from "lucide-react";
 
 export const SongConfirmationDialog: React.FC = () => {
-  const { pendingSong, confirmAndPlaySong, cancelPendingSong } = useKaraoke();
+  const { pendingSong, confirmAndPlaySong, cancelPendingSong, addPendingSongToQueue } = useKaraoke();
   
   return (
     <AlertDialog open={pendingSong !== null} onOpenChange={(open) => {
@@ -31,7 +31,7 @@ export const SongConfirmationDialog: React.FC = () => {
             Música Encontrada
           </AlertDialogTitle>
           <AlertDialogDescription className="text-tv-lg">
-            Deseja tocar esta música agora?
+            O que deseja fazer com esta música?
           </AlertDialogDescription>
         </AlertDialogHeader>
         
@@ -45,13 +45,22 @@ export const SongConfirmationDialog: React.FC = () => {
           </div>
         )}
         
-        <AlertDialogFooter className="mt-4">
+        <AlertDialogFooter className="mt-4 flex flex-col sm:flex-row gap-2">
           <AlertDialogCancel 
             onClick={cancelPendingSong} 
             className="text-tv-base flex items-center gap-1"
           >
             <X size={18} /> Cancelar
           </AlertDialogCancel>
+          
+          <Button
+            onClick={addPendingSongToQueue}
+            variant="secondary"
+            className="text-tv-base flex items-center gap-1"
+          >
+            <ListPlus size={18} /> Adicionar na Fila
+          </Button>
+          
           <AlertDialogAction 
             onClick={confirmAndPlaySong}
             className="bg-primary text-tv-base flex items-center gap-1"
