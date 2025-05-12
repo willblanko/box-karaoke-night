@@ -2,29 +2,20 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.project45a37de93bab46e5863830a7532e3cec',
+  appId: 'com.lovableapp.karaokenight',
   appName: 'box-karaoke-night',
   webDir: 'dist',
   server: {
-    url: 'https://45a37de9-3bab-46e5-8638-30a7532e3cec.lovableproject.com?forceHideBadge=true',
+    androidScheme: 'https',
     cleartext: true
   },
-  plugins: {
-    Filesystem: {
-      accessible: true,
-      // This enables access to all Android directories with proper permissions
-      androidPermissions: [
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE',
-        'android.permission.READ_MEDIA_IMAGES',
-        'android.permission.READ_MEDIA_VIDEO',
-        'android.permission.READ_MEDIA_AUDIO',
-        'android.permission.MANAGE_EXTERNAL_STORAGE'
-      ]
-    }
-  },
   android: {
-    allowMixedContent: true
+    buildOptions: {
+      keystorePath: 'release-key.keystore',
+      keystoreAlias: 'key0',
+      keystorePassword: 'android',
+      keystoreKeyPassword: 'android',
+    }
   }
 };
 
