@@ -8,12 +8,12 @@ import { KeyboardNavigation } from "@/components/KeyboardNavigation";
 import { HelpOverlay } from "@/components/HelpOverlay";
 import { USBStatus } from "@/components/USBStatus";
 import { ConfigButton } from "@/components/ConfigButton";
-import { useKaraoke } from "@/context/KaraokeContext";
+import { KaraokeProvider, useKaraoke } from "@/context/KaraokeContext";
 import { SongConfirmationDialog } from "@/components/SongConfirmationDialog";
 import { KaraokeControls } from "@/components/KaraokeControls";
 
-// KaraokeApp no longer wraps with KaraokeProvider since it's now provided by the parent
-export const KaraokeApp: React.FC = () => {
+// KaraokeContent is now a separate component that must be used inside the KaraokeProvider
+const KaraokeContent: React.FC = () => {
   const { playerState, currentSong } = useKaraoke();
 
   return (
@@ -57,5 +57,14 @@ export const KaraokeApp: React.FC = () => {
       <SongConfirmationDialog />
       <ConfigButton />
     </div>
+  );
+};
+
+// Main component that properly wraps the KaraokeContent with the KaraokeProvider
+export const KaraokeApp: React.FC = () => {
+  return (
+    <KaraokeProvider>
+      <KaraokeContent />
+    </KaraokeProvider>
   );
 };
