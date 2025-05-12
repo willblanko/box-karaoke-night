@@ -12,7 +12,6 @@ const config: CapacitorConfig = {
   plugins: {
     Filesystem: {
       accessible: true,
-      // This enables access to all Android directories with proper permissions
       androidPermissions: [
         'android.permission.READ_EXTERNAL_STORAGE',
         'android.permission.WRITE_EXTERNAL_STORAGE',
@@ -27,7 +26,6 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     allowBackup: true,
     appendUserAgent: "TVBoxApp",
-    // Request legacy storage access to support all Android versions
     requestLegacyExternalStorage: true
   }
 };
