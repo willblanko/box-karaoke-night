@@ -15,7 +15,11 @@ const config: CapacitorConfig = {
       // This enables access to all Android directories with proper permissions
       androidPermissions: [
         'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE'
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.READ_MEDIA_IMAGES',
+        'android.permission.READ_MEDIA_VIDEO',
+        'android.permission.READ_MEDIA_AUDIO',
+        'android.permission.MANAGE_EXTERNAL_STORAGE'
       ]
     }
   },
