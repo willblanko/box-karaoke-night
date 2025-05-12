@@ -1,7 +1,8 @@
+
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">box-karaoke-night</string>
     <string name="title_activity_main">box-karaoke-night</string>
-    <string name="package_name">com.lovableapp.karaokenight</string>
-    <string name="custom_url_scheme">com.lovableapp.karaokenight</string>
+    <string name="package_name">app.lovable.project45a37de93bab46e5863830a7532e3cec</string>
+    <string name="custom_url_scheme">app.lovable.project45a37de93bab46e5863830a7532e3cec</string>
 </resources>

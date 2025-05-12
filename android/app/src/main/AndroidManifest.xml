@@ -12,7 +12,7 @@
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:name="app.lovable._45a37de93bab46e5863830a7532e3cec.MainActivity"
+            android:name="app.lovable.project45a37de93bab46e5863830a7532e3cec.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
