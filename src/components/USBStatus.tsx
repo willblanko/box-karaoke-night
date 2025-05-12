@@ -1,12 +1,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useKaraoke } from "@/context/KaraokeContext";
-import { Usb, Loader2 } from "lucide-react";
+import { Usb, Loader2, HardDrive } from "lucide-react";
 import { checkUSBConnection } from "@/lib/tv-box-utils";
 import { Capacitor } from "@capacitor/core";
 
 export const USBStatus: React.FC = () => {
-  const { isUSBConnected, isLoading } = useKaraoke();
+  const { isUSBConnected, isLoading, loadSongsFromUSB } = useKaraoke();
   const [isNative, setIsNative] = useState(false);
   
   useEffect(() => {
@@ -32,8 +32,8 @@ export const USBStatus: React.FC = () => {
         </>
       ) : isUSBConnected ? (
         <>
-          <Usb size={18} className="text-green-500" />
-          <span className="text-tv-sm">USB conectado</span>
+          <HardDrive size={18} className="text-green-500" />
+          <span className="text-tv-sm">Modo USB</span>
         </>
       ) : (
         <>

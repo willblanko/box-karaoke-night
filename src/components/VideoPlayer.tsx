@@ -5,17 +5,21 @@ import { formatTimeDisplay } from "@/lib/karaoke-utils";
 import { Capacitor } from '@capacitor/core';
 import { Button } from "./ui/button";
 import { Pause, Play, RotateCcw } from "lucide-react";
+import { Filesystem } from '@capacitor/filesystem';
+import { toast } from "@/components/ui/use-toast";
 
 export const VideoPlayer: React.FC = () => {
   const { 
     currentSong, 
     playerState, 
-    setPlayerState
+    setPlayerState,
+    karaokeFolderPath
   } = useKaraoke();
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
+  const [videoError, setVideoError] = React.useState(false);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -35,15 +39,22 @@ export const VideoPlayer: React.FC = () => {
         document.exitFullscreen().catch(console.error);
       }
     };
+    
+    const handleError = (e: ErrorEvent) => {
+      console.error("Erro no vídeo:", e);
+      setVideoError(true);
+    };
 
     videoElement.addEventListener("timeupdate", handleTimeUpdate);
     videoElement.addEventListener("durationchange", handleDurationChange);
     videoElement.addEventListener("ended", handleEnded);
+    videoElement.addEventListener("error", handleError as any);
 
     return () => {
       videoElement.removeEventListener("timeupdate", handleTimeUpdate);
       videoElement.removeEventListener("durationchange", handleDurationChange);
       videoElement.removeEventListener("ended", handleEnded);
+      videoElement.removeEventListener("error", handleError as any);
     };
   }, [setPlayerState]);
 
@@ -52,29 +63,50 @@ export const VideoPlayer: React.FC = () => {
     if (!videoElement) return;
 
     if (currentSong) {
-      console.log("Carregando vídeo:", currentSong.title, currentSong.videoPath);
+      // Reset error state on new song
+      setVideoError(false);
       
-      let videoPath = currentSong.videoPath;
+      console.log("Carregando vídeo:", currentSong.title);
+      console.log("Pasta de karaoke configurada:", karaokeFolderPath);
+      
+      let videoPath = '';
       
       if (Capacitor.isNativePlatform()) {
-        console.log("Usando caminho nativo:", videoPath);
+        // No Android, usamos o caminho completo para o arquivo de vídeo
+        videoPath = `${karaokeFolderPath}/${currentSong.id}.mp4`;
+        console.log("Tentando carregar vídeo de:", videoPath);
+        
+        // Verificação se o arquivo existe (apenas para log)
+        Filesystem.stat({
+          path: videoPath
+        }).then(() => {
+          console.log("Arquivo de vídeo encontrado no caminho:", videoPath);
+        }).catch(err => {
+          console.error("Arquivo de vídeo não encontrado:", err);
+          toast({
+            title: "Erro",
+            description: `Arquivo de vídeo não encontrado: ${currentSong.id}.mp4`,
+            variant: "destructive"
+          });
+        });
       } else {
-        console.log("AMBIENTE WEB: Usando vídeo de amostra para simulação");
+        // Em ambiente web, usamos o caminho para a pasta de amostra
         videoPath = `/sample-videos/${currentSong.id}.mp4`;
         
-        const fallbackVideo = "/sample-videos/sample-karaoke.mp4";
+        console.log("AMBIENTE WEB: Usando vídeo de amostra para simulação");
         
+        // Verificação se o arquivo de amostra existe
         fetch(videoPath)
           .then(response => {
             if (!response.ok) {
-              console.log(`Vídeo específico não encontrado, usando fallback: ${fallbackVideo}`);
-              videoElement.src = fallbackVideo;
+              console.log("Vídeo específico não encontrado, usando fallback");
+              videoElement.src = "/sample-videos/sample-karaoke.mp4";
               videoElement.load();
             }
           })
           .catch(() => {
-            console.log(`Erro ao verificar vídeo, usando fallback: ${fallbackVideo}`);
-            videoElement.src = fallbackVideo;
+            console.log("Erro ao verificar vídeo, usando fallback");
+            videoElement.src = "/sample-videos/sample-karaoke.mp4";
             videoElement.load();
           });
       }
@@ -95,14 +127,16 @@ export const VideoPlayer: React.FC = () => {
           .catch(err => {
             console.error("Erro ao reproduzir vídeo:", err);
             setPlayerState("idle");
+            setVideoError(true);
           });
       } else if (playerState === "paused") {
         videoElement.pause();
       }
     } else {
       videoElement.src = "";
+      setVideoError(false);
     }
-  }, [currentSong, playerState, setPlayerState]);
+  }, [currentSong, playerState, setPlayerState, karaokeFolderPath]);
 
   // Update video state when playerState changes
   useEffect(() => {
@@ -136,6 +170,7 @@ export const VideoPlayer: React.FC = () => {
     video.currentTime = 0;
     video.play().catch(console.error);
     setPlayerState('playing');
+    setVideoError(false);
   };
 
   if (!currentSong) {
@@ -154,6 +189,15 @@ export const VideoPlayer: React.FC = () => {
           className="w-full aspect-video bg-black"
           controls={false}
         />
+        
+        {videoError && (
+          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+            <p className="text-red-400 mb-4">Erro ao carregar o vídeo</p>
+            <Button variant="outline" onClick={handleRestart} className="text-white">
+              Tentar novamente
+            </Button>
+          </div>
+        )}
         
         <div className="absolute top-0 left-0 w-full bg-gradient-to-b from-black/80 to-transparent p-4">
           <h2 className="text-tv-xl font-bold text-white">{currentSong.title}</h2>

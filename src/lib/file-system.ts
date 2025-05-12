@@ -1,3 +1,4 @@
+
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
 import { getKaraokeFolderPath } from './tv-box-utils';
@@ -37,7 +38,7 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
         title,
         artist,
         duration: 0,
-        // O caminho do vídeo agora é construído corretamente com o ID da música
+        // O caminho do vídeo é construído com o caminho atual do karaoke
         videoPath: `${karaokeFolderPath}/${videoFileName}`
       });
     }
@@ -50,20 +51,39 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
 // Função para carregar o arquivo musicas.txt
 async function loadSongCatalogFile(): Promise<string> {
   console.log("Carregando catálogo de músicas...");
+  const karaokeFolderPath = getKaraokeFolderPath();
 
   try {
     if (Capacitor.isNativePlatform()) {
       console.log("Executando em ambiente nativo Android");
       
+      // Primeiro, tenta carregar o arquivo do diretório de karaoke selecionado
+      try {
+        console.log(`Tentando carregar musicas.txt de ${karaokeFolderPath}`);
+        const result = await Filesystem.readFile({
+          path: `${karaokeFolderPath}/musicas.txt`
+        });
+        
+        const content = typeof result.data === 'string' 
+          ? result.data 
+          : new TextDecoder().decode(result.data as any);
+          
+        if (content && content.includes('***') && content.includes('[')) {
+          console.log(`Arquivo musicas.txt carregado com sucesso de ${karaokeFolderPath}`);
+          return content;
+        }
+      } catch (e) {
+        console.log(`Não foi possível carregar musicas.txt da pasta configurada:`, e);
+      }
+      
       // Lista os diretórios disponíveis para debugar
       try {
         const listRootDir = await Filesystem.readdir({
-          path: '/',
-          directory: Directory.ExternalStorage
+          path: karaokeFolderPath
         });
-        console.log("Conteúdo do diretório raiz:", listRootDir.files.map(f => f.name));
+        console.log("Conteúdo da pasta karaoke:", listRootDir.files.map(f => f.name));
       } catch (e) {
-        console.log("Não foi possível listar o diretório raiz:", e);
+        console.log("Não foi possível listar a pasta karaoke:", e);
       }
       
       // No Android, tenta carregar de várias fontes possíveis
@@ -80,7 +100,7 @@ async function loadSongCatalogFile(): Promise<string> {
         'public/musicas.txt',
         'assets/musicas.txt',
         'assets/public/musicas.txt',
-        getKaraokeFolderPath() + '/musicas.txt'
+        `${karaokeFolderPath}/musicas.txt`
       ];
       
       // Tenta todas as combinações possíveis
@@ -104,7 +124,7 @@ async function loadSongCatalogFile(): Promise<string> {
               console.log(`Arquivo encontrado em ${directory}/${path}, mas formato inválido`);
             }
           } catch (e) {
-            console.log(`Não foi possível carregar de ${directory}/${path}:`, e);
+            console.log(`Não foi possível carregar de ${directory}/${path}`);
           }
         }
       }
