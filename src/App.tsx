@@ -1,13 +1,15 @@
+
 import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, HashRouter, Navigate } from "react-router-dom";
 import { adaptUIForScreenResolution } from "@/lib/tv-box-utils";
 import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { Capacitor } from "@capacitor/core";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +27,11 @@ const App = () => {
     
     // Aplicar configurações específicas para TV
     document.body.style.overflow = 'hidden'; // Prevenir scroll em TV Box
-    document.body.style.cursor = 'none'; // Ocultar cursor do mouse em TVs
+    
+    // Ocultar cursor apenas em TV Box (não em desenvolvimento)
+    if (Capacitor.isNativePlatform()) {
+      document.body.style.cursor = 'none'; // Ocultar cursor do mouse em TVs
+    }
     
     // Simular carregamento inicial
     const timer = setTimeout(() => setIsLoading(false), 2500);
@@ -36,6 +42,9 @@ const App = () => {
     };
   }, []);
 
+  // Usar HashRouter para dispositivos móveis Android e BrowserRouter para web
+  const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -44,12 +53,12 @@ const App = () => {
         {isLoading ? (
           <SplashScreen />
         ) : (
-          <BrowserRouter>
+          <Router>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
+          </Router>
         )}
       </TooltipProvider>
     </QueryClientProvider>

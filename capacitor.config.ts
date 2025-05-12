@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'box-karaoke-night',
   webDir: 'dist',
   server: {
-    url: 'https://45a37de9-3bab-46e5-8638-30a7532e3cec.lovableproject.com?forceHideBadge=true',
+    androidScheme: 'https',
     cleartext: true
   },
   android: {
