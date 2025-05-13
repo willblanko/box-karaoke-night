@@ -20,9 +20,9 @@ android {
     
     signingConfigs {
         debug {
-            storeFile file("debug.keystore")
+            storeFile file("C:\\Users\\Willian\\Documents\\GitHub\\box-karaoke-night\\android\\app\\keystore.jks")
             storePassword "android"
-            keyAlias "androiddebugkey"
+            keyAlias "key0"
             keyPassword "android"
         }
         release {
@@ -47,12 +47,6 @@ android {
     // Add this configuration to help with file locking issues
     adbOptions {
         timeOutInMs 60000 // Increase ADB timeout to 1 minute
-    }
-    
-    // Prevent file locking issues with incremental builds
-    dexOptions {
-        preDexLibraries true
-        javaMaxHeapSize "4g" // Increase heap size for dexing
     }
 }
 
