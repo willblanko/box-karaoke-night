@@ -1,16 +1,12 @@
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useStoragePermissionContext } from "@/context/StoragePermissionContext";
 import { Button } from "@/components/ui/button";
 import { HardDrive } from "lucide-react";
 
 export const StoragePermissionRequest: React.FC = () => {
   const { hasStoragePermission, isChecking, requestPermission } = useStoragePermissionContext();
-  const hasAttemptedRequest = useRef(false);
 
-  // Evitar solicitação automática para prevenir loop
-  // Deixaremos apenas o botão manual para o usuário controlar quando solicitar
-  
   if (isChecking) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-card/80 rounded-lg shadow">
@@ -32,9 +28,10 @@ export const StoragePermissionRequest: React.FC = () => {
           Para usar este app de karaoke, precisamos acessar o armazenamento da sua TV Box para localizar os arquivos de música e vídeo.
         </p>
         <Button
+          variant="default"
           size="lg"
           onClick={() => requestPermission()}
-          className="text-tv-lg px-12 py-8 text-xl" // Botão muito maior para TV Box
+          className="w-full text-tv-lg px-12 py-6 h-auto text-xl rounded-xl"
         >
           Conceder permissão
         </Button>

@@ -10,7 +10,6 @@ export function useStoragePermission() {
   const [isChecking, setIsChecking] = useState(true);
   const { toast } = useToast();
   const permissionRequestInProgress = useRef(false);
-  const hasShownErrorToast = useRef(false);
   const permissionCheckCount = useRef(0);
 
   const checkPermissions = async () => {
@@ -88,23 +87,11 @@ export function useStoragePermission() {
         });
         
         setHasStoragePermission(true);
-        hasShownErrorToast.current = false; // Reset o flag de erro
-      } else {
-        throw new Error("Permissão não confirmada após solicitação");
       }
       
       return permissionGranted;
     } catch (error) {
       console.error('Erro ao solicitar permissão de armazenamento:', error);
-      
-      // Apenas mostra o toast de erro uma vez para evitar spam
-      if (!hasShownErrorToast.current) {
-        sonnerToast.error("Permissão negada", {
-          description: "É necessário permitir o acesso ao armazenamento",
-        });
-        hasShownErrorToast.current = true;
-      }
-      
       setHasStoragePermission(false);
       return false;
     } finally {
@@ -118,15 +105,6 @@ export function useStoragePermission() {
     };
     
     initialCheck();
-    
-    // Tenta verificar novamente após um tempo
-    const timer = setTimeout(() => {
-      if (!hasStoragePermission && !isChecking) {
-        checkPermissions();
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timer);
   }, []);
 
   return {
