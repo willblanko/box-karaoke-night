@@ -16,7 +16,13 @@ const config: CapacitorConfig = {
       keystorePassword: 'android',
       keystoreKeyPassword: 'android',
     }
-  }
+  },
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: false
+    }
+  },
+  loggingBehavior: 'debug'
 };
 
 export default config;

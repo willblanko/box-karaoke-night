@@ -27,6 +27,8 @@ if (Capacitor.isNativePlatform()) {
       }
     }
   });
+
+  console.log('Aplicativo inicializado na versão 1.1.0');
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -7,5 +7,11 @@
 		"androidScheme": "https",
 		"cleartext": true
 	},
-	"android": {}
+	"android": {},
+	"plugins": {
+		"SplashScreen": {
+			"launchAutoHide": false
+		}
+	},
+	"loggingBehavior": "debug"
 }
