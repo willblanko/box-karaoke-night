@@ -34,4 +34,10 @@ gradle.projectsEvaluated {
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
     }
+    // Add this task to clean up temp files
+    tasks.withType(org.gradle.api.tasks.compile.JavaCompile) {
+        doLast {
+            new File(temporaryDir, "java8/").deleteDir()
+        }
+    }
 }

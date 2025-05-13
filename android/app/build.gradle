@@ -48,6 +48,12 @@ android {
     adbOptions {
         timeOutInMs 60000 // Increase ADB timeout to 1 minute
     }
+    
+    // Add this to fix the DEX file locking issue
+    dexOptions {
+        preDexLibraries = false
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {
