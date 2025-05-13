@@ -11,19 +11,12 @@ const config: CapacitorConfig = {
   },
   android: {
     buildOptions: {
-      keystorePath: 'android/app/keystore.jks',
+      keystorePath: 'release-key.keystore',
       keystoreAlias: 'key0',
       keystorePassword: 'android',
       keystoreKeyPassword: 'android',
-      signingType: 'apksigner'
     }
-  },
-  plugins: {
-    SplashScreen: {
-      launchAutoHide: false
-    }
-  },
-  loggingBehavior: 'debug'
+  }
 };
 
 export default config;

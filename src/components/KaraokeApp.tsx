@@ -12,8 +12,8 @@ import { KaraokeProvider, useKaraoke } from "@/context/KaraokeContext";
 import { SongConfirmationDialog } from "@/components/SongConfirmationDialog";
 import { KaraokeControls } from "@/components/KaraokeControls";
 
-// KaraokeContent is a separate component that must be used inside the KaraokeProvider
-const KaraokeContent = () => {
+// KaraokeContent is now a separate component that must be used inside the KaraokeProvider
+const KaraokeContent: React.FC = () => {
   const { playerState, currentSong } = useKaraoke();
 
   return (
@@ -61,7 +61,7 @@ const KaraokeContent = () => {
 };
 
 // Main component that properly wraps the KaraokeContent with the KaraokeProvider
-export const KaraokeApp = () => {
+export const KaraokeApp: React.FC = () => {
   return (
     <KaraokeProvider>
       <KaraokeContent />

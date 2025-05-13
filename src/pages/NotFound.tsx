@@ -1,12 +1,11 @@
 
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Capacitor } from "@capacitor/core";
 
 const NotFound = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     console.error(
@@ -17,8 +16,13 @@ const NotFound = () => {
 
   const handleReturnHome = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Use navigate do react-router para evitar recarga completa da página
-    navigate("/");
+    // Em ambiente nativo, recarregar a página pode ajudar a resolver problemas de roteamento
+    if (Capacitor.isNativePlatform()) {
+      window.location.href = '/';
+    } else {
+      // Em ambiente web, usar navegação normal
+      window.location.href = '/';
+    }
   };
 
   return (
