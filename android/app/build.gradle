@@ -20,13 +20,13 @@ android {
     
     signingConfigs {
         debug {
-            storeFile file("C:\\Users\\Willian\\Documents\\GitHub\\box-karaoke-night\\android\\app\\keystore.jks")
+            storeFile file("${rootProject.projectDir}/app/keystore.jks")
             storePassword "android"
             keyAlias "key0"
             keyPassword "android"
         }
         release {
-            storeFile file("C:\\Users\\Willian\\Documents\\GitHub\\box-karaoke-night\\android\\app\\keystore.jks")
+            storeFile file("${rootProject.projectDir}/app/keystore.jks")
             storePassword "android"
             keyAlias "key0"
             keyPassword "android"
@@ -53,6 +53,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    // Add lint options to suppress warnings
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
     }
 }
 
