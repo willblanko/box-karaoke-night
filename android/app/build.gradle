@@ -20,7 +20,7 @@ android {
     
     signingConfigs {
         debug {
-            storeFile file("../debug.keystore")
+            storeFile file("debug.keystore")
             storePassword "android"
             keyAlias "androiddebugkey"
             keyPassword "android"
@@ -42,12 +42,6 @@ android {
         debug {
             signingConfig signingConfigs.debug
         }
-    }
-}
-
-repositories {
-    flatDir{
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
 
