@@ -1,17 +1,5 @@
-// GENERATED FILE - DO NOT EDIT
 include ':app'
-rootProject.name = "box-karaoke-night"
-
-apply from: 'variables.gradle'
-
-// Include Capacitor
-include ':capacitor-android'
-project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
-
-// Include Capacitor Plugins
-include ':capacitor-filesystem'
-project(':capacitor-filesystem').projectDir = new File('../node_modules/@capacitor/filesystem/android')
-
-// Include Capacitor Cordova Android Plugins
 include ':capacitor-cordova-android-plugins'
-project(':capacitor-cordova-android-plugins').projectDir = new File('../node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins')
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+apply from: 'capacitor.settings.gradle'

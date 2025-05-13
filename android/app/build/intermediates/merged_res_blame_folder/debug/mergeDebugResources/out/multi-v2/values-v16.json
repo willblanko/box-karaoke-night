@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "app.lovable.project45a37de93bab46e5863830a7532e3cec.app-mergeDebugResources-25:/values-v16/values-v16.xml",
+            "outputFile": "com.lovableapp.karaokenight.app-mergeDebugResources-25:/values-v16/values-v16.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Willian\\.gradle\\caches\\8.11.1\\transforms\\f1665f08e88648c35bdbb5edb9f2254a\\transformed\\appcompat-1.7.0\\res\\values-v16\\values-v16.xml",

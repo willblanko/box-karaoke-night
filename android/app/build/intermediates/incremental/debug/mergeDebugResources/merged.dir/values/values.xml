@@ -324,9 +324,9 @@
     <string name="call_notification_incoming_text">Incoming call</string>
     <string name="call_notification_ongoing_text">Ongoing call</string>
     <string name="call_notification_screening_text">Screening an incoming call</string>
-    <string name="custom_url_scheme">app.lovable.project45a37de93bab46e5863830a7532e3cec</string>
+    <string name="custom_url_scheme">com.lovableapp.karaokenight</string>
     <string name="no_webview_text">This app requires a WebView to work</string>
-    <string name="package_name">app.lovable.project45a37de93bab46e5863830a7532e3cec</string>
+    <string name="package_name">com.lovableapp.karaokenight</string>
     <string name="search_menu_title">Search</string>
     <string name="status_bar_notification_info_overflow">999+</string>
     <string name="title_activity_main">box-karaoke-night</string>
