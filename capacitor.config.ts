@@ -7,11 +7,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    cleartext: true,
-    // Configurações para desenvolvimento local
-    url: 'http://localhost:8080',
-    // Não adicione hosts externos a menos que necessário
-    allowNavigation: ['*']
+    cleartext: true
   },
   android: {
     buildOptions: {
