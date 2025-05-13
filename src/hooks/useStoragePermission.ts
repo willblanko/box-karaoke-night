@@ -1,13 +1,16 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { useToast } from '@/components/ui/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 export function useStoragePermission() {
   const [hasStoragePermission, setHasStoragePermission] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const { toast } = useToast();
+  const permissionRequestInProgress = useRef(false);
+  const hasShownErrorToast = useRef(false);
 
   const checkPermissions = async () => {
     if (!Capacitor.isNativePlatform()) {
@@ -41,10 +44,20 @@ export function useStoragePermission() {
   // Solicita permissão explicitamente
   const requestPermission = async () => {
     if (!Capacitor.isNativePlatform()) {
+      setHasStoragePermission(true);
       return true;
     }
 
+    // Evita múltiplas solicitações simultâneas
+    if (permissionRequestInProgress.current) {
+      console.log("Solicitação de permissão já em andamento...");
+      return false;
+    }
+
     try {
+      permissionRequestInProgress.current = true;
+      console.log("Solicitando permissão de armazenamento...");
+      
       // Android API >= 30 (Android 11+) requer uma abordagem diferente para permissão de armazenamento
       // Para Android < 30, essa tentativa de acesso deve disparar a solicitação de permissão
       await Filesystem.readdir({
@@ -52,28 +65,37 @@ export function useStoragePermission() {
         directory: Directory.ExternalStorage
       });
       
-      toast({
-        title: "Permissão concedida",
+      // Usamos sonner toast para mensagens menos intrusivas
+      sonnerToast.success("Permissão concedida", {
         description: "Acesso ao armazenamento permitido"
       });
       
       setHasStoragePermission(true);
+      permissionRequestInProgress.current = false;
+      hasShownErrorToast.current = false; // Reset o flag de erro
       return true;
     } catch (error) {
       console.error('Erro ao solicitar permissão de armazenamento:', error);
       
-      toast({
-        title: "Permissão negada",
-        description: "É necessário permitir o acesso ao armazenamento",
-        variant: "destructive"
-      });
+      // Apenas mostra o toast de erro uma vez para evitar spam
+      if (!hasShownErrorToast.current) {
+        sonnerToast.error("Permissão negada", {
+          description: "É necessário permitir o acesso ao armazenamento",
+        });
+        hasShownErrorToast.current = true;
+      }
       
+      permissionRequestInProgress.current = false;
       return false;
     }
   };
 
   useEffect(() => {
-    checkPermissions();
+    const initialCheck = async () => {
+      await checkPermissions();
+    };
+    
+    initialCheck();
   }, []);
 
   return {

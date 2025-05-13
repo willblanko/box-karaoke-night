@@ -13,8 +13,12 @@ const config: CapacitorConfig = {
     Filesystem: {
       androidPermissions: [
         'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE'
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.MANAGE_EXTERNAL_STORAGE'
       ]
+    },
+    CapacitorHttp: {
+      enabled: true
     }
   },
   android: {
