@@ -19,6 +19,11 @@ export const StoragePermissionRequest: React.FC = () => {
     return null; // Se já tem permissão, não mostra nada
   }
 
+  const handlePermissionRequest = () => {
+    console.log("Botão clicado: Solicitando permissão...");
+    requestPermission();
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
       <div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg shadow max-w-md">
@@ -28,12 +33,12 @@ export const StoragePermissionRequest: React.FC = () => {
           Para usar este app de karaoke, precisamos acessar o armazenamento da sua TV Box para localizar os arquivos de música e vídeo.
         </p>
         <Button
-          variant="default"
+          variant="destructive"
           size="lg"
-          onClick={() => requestPermission()}
-          className="w-full text-tv-lg px-12 py-6 h-auto text-xl rounded-xl"
+          onClick={handlePermissionRequest}
+          className="w-full text-tv-lg px-12 py-8 h-auto text-xl rounded-xl font-bold"
         >
-          Conceder permissão
+          CONCEDER PERMISSÃO
         </Button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { useToast } from '@/components/ui/use-toast';
 import { toast as sonnerToast } from 'sonner';
+import { App } from '@capacitor/app';
 
 export function useStoragePermission() {
   const [hasStoragePermission, setHasStoragePermission] = useState(false);
