@@ -43,6 +43,17 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+    
+    // Add this configuration to help with file locking issues
+    adbOptions {
+        timeOutInMs 60000 // Increase ADB timeout to 1 minute
+    }
+    
+    // Prevent file locking issues with incremental builds
+    dexOptions {
+        preDexLibraries true
+        javaMaxHeapSize "4g" // Increase heap size for dexing
+    }
 }
 
 dependencies {
