@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
   },
   android: {
     buildOptions: {
-      keystorePath: 'android/app/karaoke-release.keystore',
+      keystorePath: 'C:\\Users\\Willian\\Documents\\GitHub\\box-karaoke-night\\android\\app\\keystore.jks',
       keystoreAlias: 'key0',
       keystorePassword: 'android',
       keystoreKeyPassword: 'android',

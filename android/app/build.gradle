@@ -26,7 +26,7 @@ android {
             keyPassword "android"
         }
         release {
-            storeFile file("karaoke-release.keystore")
+            storeFile file("C:\\Users\\Willian\\Documents\\GitHub\\box-karaoke-night\\android\\app\\keystore.jks")
             storePassword "android"
             keyAlias "key0"
             keyPassword "android"
