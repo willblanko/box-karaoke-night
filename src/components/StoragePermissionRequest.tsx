@@ -8,19 +8,9 @@ export const StoragePermissionRequest: React.FC = () => {
   const { hasStoragePermission, isChecking, requestPermission } = useStoragePermissionContext();
   const hasAttemptedRequest = useRef(false);
 
-  useEffect(() => {
-    // Tenta solicitar permissão automaticamente apenas uma vez na primeira montagem
-    if (!isChecking && !hasStoragePermission && !hasAttemptedRequest.current) {
-      hasAttemptedRequest.current = true;
-      // Pequeno atraso para garantir que a interface esteja pronta
-      const timer = setTimeout(() => {
-        requestPermission();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isChecking, hasStoragePermission, requestPermission]);
-
+  // Evitar solicitação automática para prevenir loop
+  // Deixaremos apenas o botão manual para o usuário controlar quando solicitar
+  
   if (isChecking) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-card/80 rounded-lg shadow">
@@ -43,14 +33,8 @@ export const StoragePermissionRequest: React.FC = () => {
         </p>
         <Button
           size="lg"
-          onClick={() => {
-            // Previne múltiplos cliques
-            if (!hasAttemptedRequest.current) {
-              hasAttemptedRequest.current = true;
-            }
-            requestPermission();
-          }}
-          className="text-tv-lg px-8 py-6" // Botão maior para TV Box
+          onClick={() => requestPermission()}
+          className="text-tv-lg px-12 py-8 text-xl" // Botão muito maior para TV Box
         >
           Conceder permissão
         </Button>

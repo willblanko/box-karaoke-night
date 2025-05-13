@@ -11,6 +11,7 @@ export function useStoragePermission() {
   const { toast } = useToast();
   const permissionRequestInProgress = useRef(false);
   const hasShownErrorToast = useRef(false);
+  const permissionCheckCount = useRef(0);
 
   const checkPermissions = async () => {
     if (!Capacitor.isNativePlatform()) {
@@ -20,19 +21,33 @@ export function useStoragePermission() {
       return true;
     }
 
+    // Limitar tentativas de verificação para evitar loops
+    if (permissionCheckCount.current > 5) {
+      console.log("Muitas verificações de permissão, pausando");
+      setIsChecking(false);
+      return false;
+    }
+    
+    permissionCheckCount.current++;
+
     try {
       setIsChecking(true);
       
       // Tenta acessar o diretório para ver se temos permissão
-      await Filesystem.readdir({
-        path: '/storage',
+      const result = await Filesystem.readdir({
+        path: '/storage/emulated/0',
         directory: Directory.ExternalStorage
       });
       
-      console.log('Permissão de armazenamento verificada com sucesso');
-      setHasStoragePermission(true);
-      setIsChecking(false);
-      return true;
+      // Se conseguimos ler um diretório, então temos permissão
+      if (result && result.files) {
+        console.log('Permissão de armazenamento verificada com sucesso');
+        setHasStoragePermission(true);
+        setIsChecking(false);
+        return true;
+      } else {
+        throw new Error("Diretório vazio ou inacessível");
+      }
     } catch (error) {
       console.error('Erro ao verificar permissões de armazenamento:', error);
       setHasStoragePermission(false);
@@ -58,22 +73,27 @@ export function useStoragePermission() {
       permissionRequestInProgress.current = true;
       console.log("Solicitando permissão de armazenamento...");
       
-      // Android API >= 30 (Android 11+) requer uma abordagem diferente para permissão de armazenamento
-      // Para Android < 30, essa tentativa de acesso deve disparar a solicitação de permissão
+      // Tentar acessar um diretório específico para forçar a solicitação de permissão
       await Filesystem.readdir({
-        path: '/storage',
+        path: '/storage/emulated/0',
         directory: Directory.ExternalStorage
       });
       
-      // Usamos sonner toast para mensagens menos intrusivas
-      sonnerToast.success("Permissão concedida", {
-        description: "Acesso ao armazenamento permitido"
-      });
+      // Verificar se realmente temos permissão agora
+      const permissionGranted = await checkPermissions();
       
-      setHasStoragePermission(true);
-      permissionRequestInProgress.current = false;
-      hasShownErrorToast.current = false; // Reset o flag de erro
-      return true;
+      if (permissionGranted) {
+        sonnerToast.success("Permissão concedida", {
+          description: "Acesso ao armazenamento permitido"
+        });
+        
+        setHasStoragePermission(true);
+        hasShownErrorToast.current = false; // Reset o flag de erro
+      } else {
+        throw new Error("Permissão não confirmada após solicitação");
+      }
+      
+      return permissionGranted;
     } catch (error) {
       console.error('Erro ao solicitar permissão de armazenamento:', error);
       
@@ -85,8 +105,10 @@ export function useStoragePermission() {
         hasShownErrorToast.current = true;
       }
       
-      permissionRequestInProgress.current = false;
+      setHasStoragePermission(false);
       return false;
+    } finally {
+      permissionRequestInProgress.current = false;
     }
   };
 
@@ -96,6 +118,15 @@ export function useStoragePermission() {
     };
     
     initialCheck();
+    
+    // Tenta verificar novamente após um tempo
+    const timer = setTimeout(() => {
+      if (!hasStoragePermission && !isChecking) {
+        checkPermissions();
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return {
