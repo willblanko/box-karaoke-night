@@ -11,10 +11,11 @@ const config: CapacitorConfig = {
   },
   android: {
     buildOptions: {
-      keystorePath: 'release-key.keystore',
+      keystorePath: 'android/app/karaoke-release.keystore',
       keystoreAlias: 'key0',
       keystorePassword: 'android',
       keystoreKeyPassword: 'android',
+      signingType: 'apksigner'
     }
   },
   plugins: {
