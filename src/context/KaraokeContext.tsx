@@ -5,6 +5,7 @@ import { useKaraokeQueue } from "@/hooks/useKaraokeQueue";
 import { useKaraokeSongs } from "@/hooks/useKaraokeSongs";
 import { useKaraokePerformance } from "@/hooks/useKaraokePerformance";
 import { Song } from "@/lib/types";
+import { useStoragePermissionContext } from "./StoragePermissionContext";
 
 const KaraokeContext = createContext<KaraokeContextData | undefined>(undefined);
 
@@ -13,6 +14,8 @@ interface KaraokeProviderProps {
 }
 
 export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) => {
+  const { hasStoragePermission } = useStoragePermissionContext();
+
   const {
     queue,
     currentSong,
@@ -95,6 +98,11 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
   };
 
   const confirmAndPlaySong = () => {
+    if (!hasStoragePermission) {
+      console.log("Sem permissão de armazenamento para reproduzir a música");
+      return;
+    }
+    
     if (pendingSong) {
       const startedPlaying = addToQueue(pendingSong);
       
@@ -112,6 +120,11 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
 
   // New method to add song to queue without playing it immediately
   const addPendingSongToQueue = () => {
+    if (!hasStoragePermission) {
+      console.log("Sem permissão de armazenamento para adicionar a música à fila");
+      return;
+    }
+    
     if (pendingSong) {
       // Use setQueue directly to avoid auto-playing if queue is empty
       setQueue(prev => [...prev, pendingSong]);
@@ -152,6 +165,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     karaokeFolderPath,
     previousSongs,
     wasSkipped,
+    hasStoragePermission,
     
     addToQueue,
     removeFromQueue,
@@ -163,7 +177,7 @@ export const KaraokeProvider: React.FC<KaraokeProviderProps> = ({ children }) =>
     setPlayerState,
     confirmAndPlaySong,
     cancelPendingSong,
-    addPendingSongToQueue, // Add the new method to the context value
+    addPendingSongToQueue, 
     loadSongsFromUSB,
     setWasSkipped
   };

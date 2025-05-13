@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, HashRouter, Navigate } from "react-router-dom";
 import { adaptUIForScreenResolution } from "@/lib/tv-box-utils";
 import { SplashScreen } from "@/components/SplashScreen";
+import { StoragePermissionProvider } from "@/context/StoragePermissionContext";
+import { KaraokeProvider } from "@/context/KaraokeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Capacitor } from "@capacitor/core";
@@ -50,16 +52,20 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {isLoading ? (
-          <SplashScreen />
-        ) : (
-          <Router>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
-        )}
+        <StoragePermissionProvider>
+          <KaraokeProvider>
+            {isLoading ? (
+              <SplashScreen />
+            ) : (
+              <Router>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Router>
+            )}
+          </KaraokeProvider>
+        </StoragePermissionProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

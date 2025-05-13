@@ -1,7 +1,7 @@
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Song } from "./types";
-import { getKaraokeFolderPath } from './tv-box-utils';
+import { getKaraokeFolderPath, fileExists } from './tv-box-utils';
 import { Capacitor } from '@capacitor/core';
 
 // URL do arquivo no GitHub para uso no navegador
@@ -33,13 +33,17 @@ async function parseSongMetadata(content: string): Promise<Song[]> {
       const videoFileName = `${id}.mp4`;
       const karaokeFolderPath = getKaraokeFolderPath();
       
+      // Verifica se o arquivo de vídeo existe
+      const videoExists = await fileExists(`${karaokeFolderPath}/${videoFileName}`);
+      
       songs.push({
         id,
         title,
         artist,
         duration: 0,
         // O caminho do vídeo é construído com o caminho atual do karaoke
-        videoPath: `${karaokeFolderPath}/${videoFileName}`
+        videoPath: `${karaokeFolderPath}/${videoFileName}`,
+        videoExists
       });
     }
   }
@@ -61,7 +65,8 @@ async function loadSongCatalogFile(): Promise<string> {
       try {
         console.log(`Tentando carregar musicas.txt de ${karaokeFolderPath}`);
         const result = await Filesystem.readFile({
-          path: `${karaokeFolderPath}/musicas.txt`
+          path: `${karaokeFolderPath}/musicas.txt`,
+          directory: Directory.ExternalStorage
         });
         
         const content = typeof result.data === 'string' 
@@ -79,7 +84,8 @@ async function loadSongCatalogFile(): Promise<string> {
       // Lista os diretórios disponíveis para debugar
       try {
         const listRootDir = await Filesystem.readdir({
-          path: karaokeFolderPath
+          path: karaokeFolderPath,
+          directory: Directory.ExternalStorage
         });
         console.log("Conteúdo da pasta karaoke:", listRootDir.files.map(f => f.name));
       } catch (e) {

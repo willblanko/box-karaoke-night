@@ -13,7 +13,8 @@ export const VideoPlayer: React.FC = () => {
     currentSong, 
     playerState, 
     setPlayerState,
-    karaokeFolderPath
+    karaokeFolderPath,
+    hasStoragePermission
   } = useKaraoke();
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -43,6 +44,12 @@ export const VideoPlayer: React.FC = () => {
     const handleError = (e: ErrorEvent) => {
       console.error("Erro no vídeo:", e);
       setVideoError(true);
+      
+      toast({
+        title: "Erro ao carregar vídeo",
+        description: currentSong ? `Não foi possível carregar ${currentSong.id}.mp4` : "Arquivo não encontrado",
+        variant: "destructive"
+      });
     };
 
     videoElement.addEventListener("timeupdate", handleTimeUpdate);
@@ -56,7 +63,7 @@ export const VideoPlayer: React.FC = () => {
       videoElement.removeEventListener("ended", handleEnded);
       videoElement.removeEventListener("error", handleError as any);
     };
-  }, [setPlayerState]);
+  }, [setPlayerState, currentSong]);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -71,9 +78,9 @@ export const VideoPlayer: React.FC = () => {
       
       let videoPath = '';
       
-      if (Capacitor.isNativePlatform()) {
+      if (Capacitor.isNativePlatform() && hasStoragePermission) {
         // No Android, usamos o caminho completo para o arquivo de vídeo
-        videoPath = `${karaokeFolderPath}/${currentSong.id}.mp4`;
+        videoPath = currentSong.videoPath;
         console.log("Tentando carregar vídeo de:", videoPath);
         
         // Verificação se o arquivo existe (apenas para log)
@@ -88,6 +95,7 @@ export const VideoPlayer: React.FC = () => {
             description: `Arquivo de vídeo não encontrado: ${currentSong.id}.mp4`,
             variant: "destructive"
           });
+          setVideoError(true);
         });
       } else {
         // Em ambiente web, usamos o caminho para a pasta de amostra
@@ -136,7 +144,7 @@ export const VideoPlayer: React.FC = () => {
       videoElement.src = "";
       setVideoError(false);
     }
-  }, [currentSong, playerState, setPlayerState, karaokeFolderPath]);
+  }, [currentSong, playerState, setPlayerState, karaokeFolderPath, hasStoragePermission]);
 
   // Update video state when playerState changes
   useEffect(() => {
@@ -177,6 +185,14 @@ export const VideoPlayer: React.FC = () => {
     return (
       <div className="w-full aspect-video bg-card/40 flex items-center justify-center rounded-lg">
         <p className="text-tv-xl text-muted-foreground">Digite o número da música</p>
+      </div>
+    );
+  }
+
+  if (!hasStoragePermission) {
+    return (
+      <div className="w-full aspect-video bg-card/40 flex items-center justify-center rounded-lg">
+        <p className="text-tv-xl text-red-500">É necessário permitir acesso ao armazenamento</p>
       </div>
     );
   }

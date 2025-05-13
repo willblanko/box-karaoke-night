@@ -1,8 +1,8 @@
 
-import { KaraokeApp } from "@/components/KaraokeApp";
+import { PermissionAwareKaraokeApp } from "@/components/PermissionAwareKaraokeApp";
 
 const Index = () => {
-  return <KaraokeApp />;
+  return <PermissionAwareKaraokeApp />;
 };
 
 export default Index;

@@ -14,6 +14,7 @@ export interface KaraokeContextData {
   karaokeFolderPath: string;
   previousSongs: Song[];
   wasSkipped: boolean;
+  hasStoragePermission: boolean;
   
   addToQueue: (song: Song) => void;
   removeFromQueue: (index: number) => void;
@@ -25,7 +26,7 @@ export interface KaraokeContextData {
   setPlayerState: (state: PlayerState) => void;
   confirmAndPlaySong: () => void;
   cancelPendingSong: () => void;
-  addPendingSongToQueue: () => void; // Added new function
+  addPendingSongToQueue: () => void;
   loadSongsFromUSB: () => Promise<void>;
   setWasSkipped: (value: boolean) => void;
 }

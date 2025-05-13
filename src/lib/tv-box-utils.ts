@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
@@ -329,5 +330,27 @@ export async function listStorageDirectories(path: string = '/'): Promise<Array<
       { name: 'sdcard', path: '/sdcard', isDirectory: true },
       { name: 'mnt', path: '/mnt', isDirectory: true }
     ];
+  }
+}
+
+// Função para verificar se um arquivo existe
+export async function fileExists(filePath: string): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    // Em ambiente web, simulamos que o arquivo existe
+    console.log("Ambiente web, simulando que o arquivo existe:", filePath);
+    return true;
+  }
+  
+  try {
+    console.log(`Verificando existência do arquivo: ${filePath}`);
+    await Filesystem.stat({
+      path: filePath,
+      directory: Directory.ExternalStorage
+    });
+    
+    return true;
+  } catch (error) {
+    console.log(`Arquivo não existe: ${filePath}`);
+    return false;
   }
 }

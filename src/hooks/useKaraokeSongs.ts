@@ -4,6 +4,7 @@ import { Song } from '@/lib/types';
 import { scanUSBForSongs } from '@/lib/file-system';
 import { listenForUSBConnection, getKaraokeFolderPath } from '@/lib/tv-box-utils';
 import { useToast } from "@/components/ui/use-toast";
+import { useStoragePermissionContext } from '@/context/StoragePermissionContext';
 
 export const useKaraokeSongs = () => {
   const [availableSongs, setAvailableSongs] = useState<Song[]>([]);
@@ -13,6 +14,7 @@ export const useKaraokeSongs = () => {
   const [pendingSong, setPendingSong] = useState<Song | null>(null);
   const [karaokeFolderPath, setKaraokeFolderPath] = useState(getKaraokeFolderPath());
   const { toast } = useToast();
+  const { hasStoragePermission } = useStoragePermissionContext();
   const errorShown = useRef(false);
   const initialLoadDone = useRef(false);
   const searchInProgress = useRef(false);
@@ -20,6 +22,16 @@ export const useKaraokeSongs = () => {
   const loadSongsFromUSB = async () => {
     // Evita múltiplos carregamentos simultâneos
     if (isLoading) return;
+    
+    // Verifica se temos permissão
+    if (!hasStoragePermission) {
+      toast({
+        title: "Permissão necessária",
+        description: "É necessário permitir o acesso ao armazenamento para carregar músicas",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -83,19 +95,21 @@ export const useKaraokeSongs = () => {
     return () => clearInterval(interval);
   }, [karaokeFolderPath]);
 
+  // Carregar músicas quando tivermos permissão
   useEffect(() => {
-    // Load songs on mount only once
-    if (!initialLoadDone.current) {
+    if (hasStoragePermission && !initialLoadDone.current) {
       loadSongsFromUSB();
     }
-    
+  }, [hasStoragePermission]);
+
+  useEffect(() => {
     // Add USB connection listener
     const unsubscribe = listenForUSBConnection((connected) => {
       const wasConnected = isUSBConnected;
       setIsUSBConnected(connected);
       
       // Only reload songs if connection state changed from disconnected to connected
-      if (connected && !wasConnected) {
+      if (connected && !wasConnected && hasStoragePermission) {
         console.log("USB conectado, recarregando músicas");
         toast({
           title: "USB Conectado",
@@ -115,7 +129,7 @@ export const useKaraokeSongs = () => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [hasStoragePermission]);
 
   const searchSongByNumber = (number: string): Song | undefined => {
     // Evitar múltiplas buscas simultâneas

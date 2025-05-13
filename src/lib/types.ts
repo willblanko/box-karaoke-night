@@ -10,6 +10,7 @@ export interface Song {
   artist: string;    // Artista
   duration: number;  // Duração em segundos
   videoPath: string; // Caminho do vídeo no USB
+  videoExists?: boolean; // Indica se o arquivo de vídeo existe
 }
 
 // Avaliação de desempenho após a música
