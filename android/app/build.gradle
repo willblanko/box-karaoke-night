@@ -1,13 +1,14 @@
+
 apply plugin: 'com.android.application'
 
 android {
     namespace "com.lovableapp.karaokenight"
-    compileSdkVersion 35
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.lovableapp.karaokenight"
         minSdkVersion 23
-        targetSdkVersion
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
