@@ -83,10 +83,7 @@ export function useStoragePermission() {
       const permissionGranted = await checkPermissions();
       
       if (permissionGranted) {
-        sonnerToast.success("Permissão concedida", {
-          description: "Acesso ao armazenamento permitido"
-        });
-        
+        console.log("Permissão concedida com sucesso");
         setHasStoragePermission(true);
       }
       
