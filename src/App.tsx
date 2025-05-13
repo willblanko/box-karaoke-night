@@ -31,6 +31,9 @@ const App = () => {
     // Ocultar cursor apenas em TV Box (não em desenvolvimento)
     if (Capacitor.isNativePlatform()) {
       document.body.style.cursor = 'none'; // Ocultar cursor do mouse em TVs
+      console.log("Executando em ambiente nativo: Android");
+    } else {
+      console.log("Executando em ambiente web");
     }
     
     // Simular carregamento inicial
@@ -42,8 +45,9 @@ const App = () => {
     };
   }, []);
 
-  // Usar HashRouter para dispositivos móveis Android e BrowserRouter para web
-  const Router = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
+  // SEMPRE usar HashRouter para aplicativos Android com Capacitor
+  // HashRouter é mais compatível com aplicações WebView em Android
+  const Router = HashRouter;
 
   return (
     <QueryClientProvider client={queryClient}>
