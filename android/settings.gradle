@@ -3,6 +3,8 @@
 include ':app'
 rootProject.name = "box-karaoke-night"
 
+apply from: 'variables.gradle'
+
 // Include Capacitor
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
